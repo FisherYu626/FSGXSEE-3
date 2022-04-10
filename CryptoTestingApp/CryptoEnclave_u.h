@@ -65,10 +65,11 @@ int SGX_UBRIDGE(SGX_CDECL, sgx_thread_setwait_untrusted_events_ocall, (const voi
 int SGX_UBRIDGE(SGX_CDECL, sgx_thread_set_multiple_untrusted_events_ocall, (const void** waiters, size_t total));
 #endif
 
-sgx_status_t ecall_init(sgx_enclave_id_t eid, unsigned char* keyF, size_t len);
+sgx_status_t ecall_init(sgx_enclave_id_t eid, unsigned char* keyF1, unsigned char* keyF2, size_t len);
 sgx_status_t ecall_addDoc(sgx_enclave_id_t eid, char* doc_id, size_t id_length, char* content, int content_length);
 sgx_status_t ecall_delDoc(sgx_enclave_id_t eid, char* doc_id, size_t id_length);
 sgx_status_t ecall_search(sgx_enclave_id_t eid, const char* keyword, size_t len);
+sgx_status_t ecall_printHelloWorld(sgx_enclave_id_t eid);
 
 #ifdef __cplusplus
 }

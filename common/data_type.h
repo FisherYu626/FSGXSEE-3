@@ -16,7 +16,7 @@
 /* for all sources except OCALL/ECALL */
 
 //const std::string raw_doc_dir= "streaming/"; 
-const std::string raw_doc_dir= "rangeStreaming/"; 
+const std::string raw_doc_dir= "streaming/"; 
 
 #define AESGCM_IV_SIZE 12
 static unsigned char gcm_iv[] = {
@@ -36,6 +36,10 @@ static unsigned char gcm_iv[] = {
 
 /************fisher added*********************************/
 #define KEYWORD_BIT_LENGTH 15
+/*********************************************************/
+
+/************fisher added 2.0*********************************/
+#define P 3
 /*********************************************************/
 typedef struct
 {
@@ -69,7 +73,8 @@ typedef struct docContents{
 } docContent;
 
 typedef std::pair<entryKey, entryValue> entry;
-
+//fisher added
+typedef std::array<int, P> Block;
 // yangxu add
 // std::set<int> doc_ids;
 

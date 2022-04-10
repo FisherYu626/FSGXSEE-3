@@ -67,3 +67,18 @@ void print_bytes(uint8_t *ptr, uint32_t len) {
 
   printf("\n");
 }
+
+
+std::vector<std::string> split(std::string s, char c)
+{
+    s += c;
+    std::vector<std::string> ret;
+    std::string t;
+    for(int i = 0; i < s.length(); i ++ )
+    {
+        if(s[i] == c)
+            ret.push_back(t), t = "";
+        else t += s[i];
+    }
+    return ret;
+}

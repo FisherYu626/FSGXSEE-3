@@ -20,11 +20,16 @@ class Client{
         void Del_GivenDocIndex(const int del_index, docId* delV_i);
         void Del_GivenDocArray(const int * del_arr, docId* delV, int n);
         void getKFValue(unsigned char * outKey);
+        //fisher altered!
+        void getKFValues(unsigned char * outKey1,unsigned char * outKey2);
         void EncryptDoc(const docContent *data, entry *encrypted_doc );
         void DecryptDocCollection(std::vector<std::string> Res);
 
     private:
         unsigned char KF[ENC_KEY_SIZE];
+        //fisher altered!
+        unsigned char KF1[ENC_KEY_SIZE];
+        unsigned char KF2[ENC_KEY_SIZE];
         int file_reading_counter;
 };
  

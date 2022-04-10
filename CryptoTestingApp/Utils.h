@@ -20,4 +20,7 @@ int dec_aes_gcm(unsigned char *ciphertext, int ciphertext_len,
                 const unsigned char *key,
                 unsigned char *plaintext);
 
+//fisher added !!
+std::vector<std::string> split(std::string s, char c);
+
 #endif

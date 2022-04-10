@@ -28,7 +28,8 @@
 
 
 typedef struct ms_ecall_init_t {
-	unsigned char* ms_keyF;
+	unsigned char* ms_keyF1;
+	unsigned char* ms_keyF2;
 	size_t ms_len;
 } ms_ecall_init_t;
 
@@ -134,41 +135,64 @@ static sgx_status_t SGX_CDECL sgx_ecall_init(void* pms)
 	sgx_lfence();
 	ms_ecall_init_t* ms = SGX_CAST(ms_ecall_init_t*, pms);
 	sgx_status_t status = SGX_SUCCESS;
-	unsigned char* _tmp_keyF = ms->ms_keyF;
+	unsigned char* _tmp_keyF1 = ms->ms_keyF1;
 	size_t _tmp_len = ms->ms_len;
-	size_t _len_keyF = _tmp_len;
-	unsigned char* _in_keyF = NULL;
+	size_t _len_keyF1 = _tmp_len;
+	unsigned char* _in_keyF1 = NULL;
+	unsigned char* _tmp_keyF2 = ms->ms_keyF2;
+	size_t _len_keyF2 = _tmp_len;
+	unsigned char* _in_keyF2 = NULL;
 
-	CHECK_UNIQUE_POINTER(_tmp_keyF, _len_keyF);
+	CHECK_UNIQUE_POINTER(_tmp_keyF1, _len_keyF1);
+	CHECK_UNIQUE_POINTER(_tmp_keyF2, _len_keyF2);
 
 	//
 	// fence after pointer checks
 	//
 	sgx_lfence();
 
-	if (_tmp_keyF != NULL && _len_keyF != 0) {
-		if ( _len_keyF % sizeof(*_tmp_keyF) != 0)
+	if (_tmp_keyF1 != NULL && _len_keyF1 != 0) {
+		if ( _len_keyF1 % sizeof(*_tmp_keyF1) != 0)
 		{
 			status = SGX_ERROR_INVALID_PARAMETER;
 			goto err;
 		}
-		_in_keyF = (unsigned char*)malloc(_len_keyF);
-		if (_in_keyF == NULL) {
+		_in_keyF1 = (unsigned char*)malloc(_len_keyF1);
+		if (_in_keyF1 == NULL) {
 			status = SGX_ERROR_OUT_OF_MEMORY;
 			goto err;
 		}
 
-		if (memcpy_s(_in_keyF, _len_keyF, _tmp_keyF, _len_keyF)) {
+		if (memcpy_s(_in_keyF1, _len_keyF1, _tmp_keyF1, _len_keyF1)) {
+			status = SGX_ERROR_UNEXPECTED;
+			goto err;
+		}
+
+	}
+	if (_tmp_keyF2 != NULL && _len_keyF2 != 0) {
+		if ( _len_keyF2 % sizeof(*_tmp_keyF2) != 0)
+		{
+			status = SGX_ERROR_INVALID_PARAMETER;
+			goto err;
+		}
+		_in_keyF2 = (unsigned char*)malloc(_len_keyF2);
+		if (_in_keyF2 == NULL) {
+			status = SGX_ERROR_OUT_OF_MEMORY;
+			goto err;
+		}
+
+		if (memcpy_s(_in_keyF2, _len_keyF2, _tmp_keyF2, _len_keyF2)) {
 			status = SGX_ERROR_UNEXPECTED;
 			goto err;
 		}
 
 	}
 
-	ecall_init(_in_keyF, _tmp_len);
+	ecall_init(_in_keyF1, _in_keyF2, _tmp_len);
 
 err:
-	if (_in_keyF) free(_in_keyF);
+	if (_in_keyF1) free(_in_keyF1);
+	if (_in_keyF2) free(_in_keyF2);
 	return status;
 }
 
@@ -337,37 +361,46 @@ err:
 	return status;
 }
 
+static sgx_status_t SGX_CDECL sgx_ecall_printHelloWorld(void* pms)
+{
+	sgx_status_t status = SGX_SUCCESS;
+	if (pms != NULL) return SGX_ERROR_INVALID_PARAMETER;
+	ecall_printHelloWorld();
+	return status;
+}
+
 SGX_EXTERNC const struct {
 	size_t nr_ecall;
-	struct {void* ecall_addr; uint8_t is_priv; uint8_t is_switchless;} ecall_table[4];
+	struct {void* ecall_addr; uint8_t is_priv; uint8_t is_switchless;} ecall_table[5];
 } g_ecall_table = {
-	4,
+	5,
 	{
 		{(void*)(uintptr_t)sgx_ecall_init, 0, 0},
 		{(void*)(uintptr_t)sgx_ecall_addDoc, 0, 0},
 		{(void*)(uintptr_t)sgx_ecall_delDoc, 0, 0},
 		{(void*)(uintptr_t)sgx_ecall_search, 0, 0},
+		{(void*)(uintptr_t)sgx_ecall_printHelloWorld, 0, 0},
 	}
 };
 
 SGX_EXTERNC const struct {
 	size_t nr_ocall;
-	uint8_t entry_table[12][4];
+	uint8_t entry_table[12][5];
 } g_dyn_entry_table = {
 	12,
 	{
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
-		{0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, },
 	}
 };
 

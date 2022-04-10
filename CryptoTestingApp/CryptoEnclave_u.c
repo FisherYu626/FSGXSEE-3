@@ -2,7 +2,8 @@
 #include <errno.h>
 
 typedef struct ms_ecall_init_t {
-	unsigned char* ms_keyF;
+	unsigned char* ms_keyF1;
+	unsigned char* ms_keyF2;
 	size_t ms_len;
 } ms_ecall_init_t;
 
@@ -215,11 +216,12 @@ static const struct {
 		(void*)CryptoEnclave_sgx_thread_set_multiple_untrusted_events_ocall,
 	}
 };
-sgx_status_t ecall_init(sgx_enclave_id_t eid, unsigned char* keyF, size_t len)
+sgx_status_t ecall_init(sgx_enclave_id_t eid, unsigned char* keyF1, unsigned char* keyF2, size_t len)
 {
 	sgx_status_t status;
 	ms_ecall_init_t ms;
-	ms.ms_keyF = keyF;
+	ms.ms_keyF1 = keyF1;
+	ms.ms_keyF2 = keyF2;
 	ms.ms_len = len;
 	status = sgx_ecall(eid, 0, &ocall_table_CryptoEnclave, &ms);
 	return status;
@@ -254,6 +256,13 @@ sgx_status_t ecall_search(sgx_enclave_id_t eid, const char* keyword, size_t len)
 	ms.ms_keyword = keyword;
 	ms.ms_len = len;
 	status = sgx_ecall(eid, 3, &ocall_table_CryptoEnclave, &ms);
+	return status;
+}
+
+sgx_status_t ecall_printHelloWorld(sgx_enclave_id_t eid)
+{
+	sgx_status_t status;
+	status = sgx_ecall(eid, 4, &ocall_table_CryptoEnclave, NULL);
 	return status;
 }
 

@@ -13,14 +13,21 @@
 #include <cstring> 
 #include <openssl/rand.h>
 
-
+//fisher altered!
 Client::Client(){
     file_reading_counter=0;
-    RAND_bytes(KF,ENC_KEY_SIZE);
+    RAND_bytes(KF1,ENC_KEY_SIZE);
+    RAND_bytes(KF2,ENC_KEY_SIZE);
 }
 
 void Client::getKFValue(unsigned char * outKey){
-    memcpy(outKey,KF,ENC_KEY_SIZE);
+    memcpy(outKey,KF1,ENC_KEY_SIZE);
+}
+
+//fisher altered!
+void Client::getKFValues(unsigned char * outKey1,unsigned char * outKey2){
+    memcpy(outKey1,KF1,ENC_KEY_SIZE);
+    memcpy(outKey2,KF1,ENC_KEY_SIZE);
 }
 
 void Client::ReadNextDoc(docContent *content){
@@ -40,6 +47,9 @@ void Client::ReadNextDoc(docContent *content){
     memcpy(content->id.doc_id, fileName.c_str(),doc_id_size);
     content->id.id_length = doc_id_size;
 
+    //查看读取文档id
+    std::cout<<"<"<<content->id.doc_id<<">"<<std::endl;
+
     //read the file content raw_doc_dir "/streaming"
     inFile.open( raw_doc_dir + fileName); 
     strStream << inFile.rdbuf();
@@ -56,6 +66,9 @@ void Client::ReadNextDoc(docContent *content){
     memcpy(content->content, str.c_str(),plaintext_len);
     // std::cout<<str.c_str()<<std::endl;
     content->content_length = plaintext_len;
+    std::cout<<"here is the ids"<<std::endl;
+    //查看读取文档的内容ids
+    std::cout<<str.c_str()<<std::endl;
 
     strStream.clear();
 
