@@ -11,6 +11,9 @@
 #include "Client.h"
 #include "Utils.h"
 
+//fsiher added!
+#include<iostream>
+#include<map>
 //for measurement
 #include <cstdint>
 #include <chrono>
@@ -23,6 +26,10 @@ uint64_t timeSinceEpochMillisec() {
 
 
 #define ENCLAVE_FILE "CryptoEnclave.signed.so"
+
+//fisher added construct DB(V)
+
+std::map<int,std::vector<int>> DB;
 
 int total_file_no = (int)10;//50000;//100000
 int del_no = (int)2;//10000;//10000;
@@ -142,91 +149,167 @@ int main()
 	myClient= new Client();
 
 	//Enclave
-	unsigned char KFvalue[ENC_KEY_SIZE];
-	myClient->getKFValue(KFvalue);
-	ecall_init(eid,KFvalue,(size_t)ENC_KEY_SIZE);
+	unsigned char KF1value[ENC_KEY_SIZE];
+	unsigned char KF2value[ENC_KEY_SIZE];
+	myClient->getKFValues(KF1value,KF2value);
 
-	//Server	
+
+	//fisher altered!
+	ecall_init(eid,KF1value,KF2value,(size_t)ENC_KEY_SIZE);
+
+	ecall_printHelloWorld(eid);
+
+
+	/**************************fisher altered!2.0 *********************************/
 	myServer= new Server();
 
 	printf("Adding doc\n");
 
-	/*** Update Protocol with op = add */
-	for(int i=1;i <= total_file_no; i++){  //total_file_no
-		//client read a document
-		//printf("->%d",i);
+	/*** Saving the V to DB(v)*************************************/
+	for(int i=1;i <= total_file_no; i++){  
 		
 		docContent *fetch_data;
+		std::vector<std::string> res;
+
+
 		fetch_data = (docContent *)malloc(sizeof( docContent));
 		myClient->ReadNextDoc(fetch_data);
 
-		//encrypt and send to Server
-		entry *encrypted_entry;
-		encrypted_entry = (entry*)malloc(sizeof(entry));
-		
-		encrypted_entry->first.content_length = fetch_data->id.id_length; //add dociId
-		encrypted_entry->first.content = (char*) malloc(fetch_data->id.id_length);
-		encrypted_entry->second.message_length = fetch_data->content_length + AESGCM_MAC_SIZE + AESGCM_IV_SIZE;		
-		encrypted_entry->second.message = (char *)malloc(encrypted_entry->second.message_length);
+		res = split(fetch_data->content,',');
 
+        for(auto i:res){
+			int inum  = std::stoi(i);
+            DB[inum].push_back(std::stoi(fetch_data->id.doc_id));
+        }
 
-		myClient->EncryptDoc(fetch_data,encrypted_entry);
-		
-		myServer->ReceiveEncDoc(encrypted_entry);
-		
-		//upload (op,in) to Enclave
-
-		ecall_addDoc(eid,fetch_data->id.doc_id,fetch_data->id.id_length,
-						fetch_data->content,fetch_data->content_length);
-
-		//free memory 
 		free(fetch_data->content);
 		free(fetch_data->id.doc_id);
 		free(fetch_data);
 
-		free(encrypted_entry->first.content);
-		free(encrypted_entry->second.message);
-		free(encrypted_entry);
 	}
-
-
-	//** Update Protocol with op = del (id)
-	printf("\nDeleting doc\n");
+	// cout the DB
+	for (auto & i : DB) {
+		printf("the keyword %d includes ",i.first);
+        for (auto j = i.second.begin(); j != i.second.end(); j++) {
+            printf("%d ",*j);
+        }
+		printf("\n");
+    }
 	
-	//docId* delV = new docId[del_no];
+	//divide DB into p blocks
+	std:: vector<Block> Blocks;
+	for(auto & DBv : DB){
+		int vword = DBv.first;
+		int BlockNums = DBv.second.size()/P+1;
+		std::cout<<"DBvNums size "<<BlockNums<<std::endl;
+		std::vector<int> DBvItems = DBv.second;
+		// for(auto i:DBv.second){
+		// 	printf("%d",i);
+		// } 
 
-	//fisher put docId delV_i inside the for!!
-	for(int del_index=1; del_index <=del_no; del_index++){
-		docId delV_i;
-		//printf("->%s",delV_i[del_index].doc_id);
 
-		myClient->Del_GivenDocIndex(del_index, &delV_i);
-
-		ecall_delDoc(eid,delV_i.doc_id,delV_i.id_length);
+		for(int i = 0;i<BlockNums;i++){
+			Block temp;
+			int j = 0;
+			for(;j< P && (i*P+j)<DBvItems.size() ;j++){
+				temp[j] = DBvItems[i*P+j];
+			}
+			while(j<P){
+				temp[j] = -1;
+				j++;
+			}
+			Blocks.push_back(temp);
+		}
+	
+		
 	}
 
-	// //fisher altered!!
-	// if(delV_i.doc_id != nullptr){
-	// 	free(delV_i.doc_id);
+
+
+
+	/**************************fisher altered!2.0 *********************************/
+
+	//Server	
+	// myServer= new Server();
+
+	// printf("Adding doc\n");
+
+	// /*** Update Protocol with op = add */
+	// for(int i=1;i <= total_file_no; i++){  //total_file_no
+	// 	//client read a document
+	// 	//printf("->%d",i);
+		
+	// 	docContent *fetch_data;
+	// 	fetch_data = (docContent *)malloc(sizeof( docContent));
+	// 	myClient->ReadNextDoc(fetch_data);
+
+	// 	//encrypt and send to Server
+	// 	entry *encrypted_entry;
+	// 	encrypted_entry = (entry*)malloc(sizeof(entry));
+		
+	// 	encrypted_entry->first.content_length = fetch_data->id.id_length; //add dociId
+	// 	encrypted_entry->first.content = (char*) malloc(fetch_data->id.id_length);
+	// 	encrypted_entry->second.message_length = fetch_data->content_length + AESGCM_MAC_SIZE + AESGCM_IV_SIZE;		
+	// 	encrypted_entry->second.message = (char *)malloc(encrypted_entry->second.message_length);
+
+
+	// 	myClient->EncryptDoc(fetch_data,encrypted_entry);
+		
+	// 	myServer->ReceiveEncDoc(encrypted_entry);
+		
+	// 	//upload (op,in) to Enclave
+
+	// 	ecall_addDoc(eid,fetch_data->id.doc_id,fetch_data->id.id_length,
+	// 					fetch_data->content,fetch_data->content_length);
+
+	// 	//free memory 
+	// 	free(fetch_data->content);
+	// 	free(fetch_data->id.doc_id);
+	// 	free(fetch_data);
+
+	// 	free(encrypted_entry->first.content);
+	// 	free(encrypted_entry->second.message);
+	// 	free(encrypted_entry);
 	// }
 
 
-	std::string s_keyword[2]= {"0,2000","4000,5000"};
-	// std::string s_keyword[2]= {"0,2000","4800,5000"};  
+	// //** Update Protocol with op = del (id)
+	// printf("\nDeleting doc\n");
+	
+	// //docId* delV = new docId[del_no];
 
-	for (int s_i = 0; s_i < 2; s_i++){
-		printf("\nSearching ==> %s\n", s_keyword[s_i].c_str());
+	// //fisher put docId delV_i inside the for!!
+	// for(int del_index=1; del_index <=del_no; del_index++){
+	// 	docId delV_i;
+	// 	//printf("->%s",delV_i[del_index].doc_id);
 
-		myServer->doc_ids.clear();
-		std::cout << timeSinceEpochMillisec() << std::endl;
+	// 	myClient->Del_GivenDocIndex(del_index, &delV_i);
 
-		ecall_search(eid, s_keyword[s_i].c_str(), s_keyword[s_i].size());
+	// 	ecall_delDoc(eid,delV_i.doc_id,delV_i.id_length);
+	// }
 
-		std::cout << timeSinceEpochMillisec() << std::endl;
-	}
+	// // //fisher altered!!
+	// // if(delV_i.doc_id != nullptr){
+	// // 	free(delV_i.doc_id);
+	// // }
 
-	delete myClient;
-	delete myServer;
+
+	// std::string s_keyword[2]= {"0,2000","4000,5000"};
+	// // std::string s_keyword[2]= {"0,2000","4800,5000"};  
+
+	// for (int s_i = 0; s_i < 2; s_i++){
+	// 	printf("\nSearching ==> %s\n", s_keyword[s_i].c_str());
+
+	// 	myServer->doc_ids.clear();
+	// 	std::cout << timeSinceEpochMillisec() << std::endl;
+
+	// 	ecall_search(eid, s_keyword[s_i].c_str(), s_keyword[s_i].size());
+
+	// 	std::cout << timeSinceEpochMillisec() << std::endl;
+	// }
+
+	// delete myClient;
+	// delete myServer;
 
 	return 0;
 }
