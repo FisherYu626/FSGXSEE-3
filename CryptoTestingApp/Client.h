@@ -22,6 +22,8 @@ class Client{
         void getKFValue(unsigned char * outKey);
         //fisher altered!
         void getKFValues(unsigned char * outKey1,unsigned char * outKey2);
+        void G_AesEncrypt(Lvalue * L ,unsigned char * KF1Value,const int & v,CT_pair & CT);
+
         void EncryptDoc(const docContent *data, entry *encrypted_doc );
         void DecryptDocCollection(std::vector<std::string> Res);
 

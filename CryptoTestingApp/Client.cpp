@@ -121,3 +121,47 @@ void Client::DecryptDocCollection(std::vector<std::string> Res){
     
     }
 }
+
+//fisher added!
+void Client::G_AesEncrypt(Lvalue * L ,unsigned char * KF1Value,const int & v,CT_pair & CT){
+    
+    unsigned char * vct = (unsigned char *)malloc(3*sizeof(int));
+    // unsigned char * plaintext = (unsigned char *)malloc(3*sizeof(int));
+    
+    if(!vct) {
+        std::cout<<"malloc error!"<<std::endl;
+        return;
+    }
+    std::cout<<"V is "<<v<<std::endl;
+    std::cout<<"C is "<<CT[0]<<std::endl;
+    std::cout<<"T is "<<CT[1]<<std::endl;
+
+
+    memcpy(vct,&v,4);
+    memcpy(vct+4,&CT[0],4);
+    memcpy(vct+8,&CT[1],4);
+    
+    // for(int i = 0;i<12;i++){
+    //     printf("%x",*(vct+i));
+    //     if((i+1)%4 == 0) printf(" ");
+    // }
+    
+
+
+    //问题在此处产生
+    L->ciphertext_length = enc_aes_gcm(vct,3*sizeof(int),KF1Value,(unsigned char *)L->ciphertext);
+    
+    // std::cout<<"cipher length is "<<L->ciphertext_length<<std::endl;
+
+    //验证加密是否成功
+    // dec_aes_gcm((unsigned char *)L->ciphertext,L->ciphertext_length,KF1Value,plaintext);
+    // std::cout<<"after dec:"<<std::endl;
+    // for(int i = 0;i<12;i++){
+    //     printf("%x",*(vct+i));
+    //     if((i+1)%4 == 0) printf(" ");
+    // }
+
+    if(vct) free(vct);
+    // free(plaintext);
+    return;
+}

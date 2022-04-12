@@ -50,6 +50,8 @@ App_Include_Paths := -IInclude -IApp -I$(SGX_SDK)/include -I/usr/include -I/usr/
 
 App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths)
 
+#fisher added
+App_C_Flags +=-g
 # Three configuration modes - Debug, prerelease, release
 #   Debug - Macro DEBUG enabled.
 #   Prerelease - Macro NDEBUG and EDEBUG enabled.
@@ -73,7 +75,7 @@ endif
 
 App_Cpp_Objects := $(App_Cpp_Files:.cpp=.o)
 
-App_Name := cryptoTestingApp_
+App_Name := cryptoTestingApp
 
 ######## Enclave Settings ########
 ifneq ($(SGX_MODE), HW)

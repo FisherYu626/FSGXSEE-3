@@ -72,9 +72,18 @@ typedef struct docContents{
     //std::vector<std::string> wordList;
 } docContent;
 
+
+//fisher added
+typedef struct Lvalue {
+    char *ciphertext;
+    int ciphertext_length;  // length of the entry_value
+} Lvalue;
+
 typedef std::pair<entryKey, entryValue> entry;
 //fisher added
 typedef std::array<int, P> Block;
+typedef std::array<int, 2> CT_pair;
+typedef std::array<int, 3> VCT_pair;
 // yangxu add
 // std::set<int> doc_ids;
 

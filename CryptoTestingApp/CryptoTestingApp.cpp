@@ -14,6 +14,7 @@
 //fsiher added!
 #include<iostream>
 #include<map>
+#include <openssl/rand.h>
 //for measurement
 #include <cstdint>
 #include <chrono>
@@ -157,11 +158,11 @@ int main()
 	//fisher altered!
 	ecall_init(eid,KF1value,KF2value,(size_t)ENC_KEY_SIZE);
 
-	ecall_printHelloWorld(eid);
+	//ecall_printHelloWorld(eid);
 
 
 	/**************************fisher altered!2.0 *********************************/
-	myServer= new Server();
+	//myServer= new Server();
 
 	printf("Adding doc\n");
 
@@ -188,24 +189,22 @@ int main()
 
 	}
 	// cout the DB
-	for (auto & i : DB) {
-		printf("the keyword %d includes ",i.first);
-        for (auto j = i.second.begin(); j != i.second.end(); j++) {
-            printf("%d ",*j);
-        }
-		printf("\n");
-    }
+	// for (auto & i : DB) {
+	// 	printf("the keyword %d includes ",i.first);
+    //     for (auto j = i.second.begin(); j != i.second.end(); j++) {
+    //         printf("%d ",*j);
+    //     }
+	// 	printf("\n");
+    // }
 	
 	//divide DB into p blocks
-	std:: vector<Block> Blocks;
+
 	for(auto & DBv : DB){
+		std:: vector<Block> Blocks;
 		int vword = DBv.first;
 		int BlockNums = DBv.second.size()/P+1;
 		std::cout<<"DBvNums size "<<BlockNums<<std::endl;
 		std::vector<int> DBvItems = DBv.second;
-		// for(auto i:DBv.second){
-		// 	printf("%d",i);
-		// } 
 
 
 		for(int i = 0;i<BlockNums;i++){
@@ -220,9 +219,43 @@ int main()
 			}
 			Blocks.push_back(temp);
 		}
-	
+
+		int t = 0;
+		for(auto i : Blocks){
+			std::cout<<"the block "<<t<<"th num1 is "<< i[0]<<std::endl;
+			std::cout<<"the block "<<t<<"th num2 is "<< i[1]<<std::endl;
+			std::cout<<"the block "<<t<<"th num3 is "<< i[2]<<std::endl;
+			t++;
+		}
+
+		CT_pair CT;
+		CT[0] = 0;
+		CT[1] = 0;
+		
+
+		for(auto block : Blocks){
+			Lvalue * L = (Lvalue *)malloc(sizeof(Lvalue));
+
+			unsigned char * gama = (unsigned char *)malloc((AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4)*sizeof(unsigned char));
+			
+			L->ciphertext = (char *)malloc((AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4)*sizeof(unsigned char));
+			L->ciphertext_length = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4;
+			
+			
+			myClient->G_AesEncrypt(L,KF1value,vword,CT);
+
+
+			RAND_bytes(gama,AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4);
+			
+
+			
+			free(L->ciphertext);
+			free(gama);
+			free(L);
+		}
 		
 	}
+
 
 
 
@@ -308,7 +341,7 @@ int main()
 	// 	std::cout << timeSinceEpochMillisec() << std::endl;
 	// }
 
-	// delete myClient;
+	delete myClient;
 	// delete myServer;
 
 	return 0;
