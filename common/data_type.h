@@ -75,9 +75,20 @@ typedef struct docContents{
 
 //fisher added
 typedef struct Lvalue {
-    char *ciphertext;
+    unsigned char *ciphertext;
     int ciphertext_length;  // length of the entry_value
 } Lvalue;
+
+typedef struct Vvalue {
+    unsigned char *message;
+    int message_length;  // length of the entry_value
+} Vvalue;
+
+typedef struct Gama {
+    unsigned char *message;
+    int message_length;  // length of the entry_value
+} Gama;
+
 
 typedef std::pair<entryKey, entryValue> entry;
 //fisher added

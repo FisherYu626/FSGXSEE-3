@@ -30,13 +30,16 @@ int enc_aes_gcm(const unsigned char *plaintext, int plaintext_len,
     EVP_CIPHER_CTX *ctx= EVP_CIPHER_CTX_new();
     EVP_EncryptInit(ctx, EVP_aes_128_gcm(),key, gcm_iv);
 
+    // 加密来自缓冲区的inl字节in并将加密版本写入out,实际写入字节数存于outl
     EVP_EncryptUpdate(ctx, output+ AESGCM_MAC_SIZE+ AESGCM_IV_SIZE, &ciphertext_len, plaintext, plaintext_len);
 
-
-
-
+    //对密文进行填充，填充大小写入final_len
     EVP_EncryptFinal(ctx, output+ AESGCM_MAC_SIZE+ AESGCM_IV_SIZE + ciphertext_len, &final_len);
+
+    std::cout<<std::endl<<"此次加密填充长度为"<<final_len<<std::endl;
+    //对上下文ctx执行特定于密码的控制操作
     EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, AESGCM_MAC_SIZE, output);
+    //从密码上下文中清除所有信息并释放与其关联的所有已分配内存，包括ctx本身。此函数应在使用密码的所有操作完成后调用，以免敏感信息保留在内存中。
     EVP_CIPHER_CTX_free(ctx);
 
     ciphertext_len = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE + ciphertext_len + final_len;

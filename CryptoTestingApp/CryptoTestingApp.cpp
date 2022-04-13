@@ -235,22 +235,43 @@ int main()
 
 		for(auto block : Blocks){
 			Lvalue * L = (Lvalue *)malloc(sizeof(Lvalue));
+			Vvalue * V = (Vvalue *)malloc(sizeof(Vvalue));
+			Gama * gama_plain = (Gama *)malloc(sizeof(Gama));
+			Gama * gama_cipher = (Gama *)malloc(sizeof(Gama));
 
-			unsigned char * gama = (unsigned char *)malloc((AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4)*sizeof(unsigned char));
 			
-			L->ciphertext = (char *)malloc((AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4)*sizeof(unsigned char));
+			gama_plain->message = (unsigned char *)malloc(P*sizeof(int));
+			gama_plain->message_length = P*sizeof(int);
+
+			gama_cipher->message = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +P*sizeof(int) );
+			gama_cipher->message_length = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +P*sizeof(int);
+			
+			L->ciphertext = (unsigned char *)malloc((AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4)*sizeof(unsigned char));
 			L->ciphertext_length = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4;
+
+			V->message = (unsigned char *)malloc((AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4)*sizeof(unsigned char));
+			V->message_length = (AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4)*sizeof(unsigned char);
 			
 			
 			myClient->G_AesEncrypt(L,KF1value,vword,CT);
 
 
-			RAND_bytes(gama,AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4);
+			RAND_bytes(gama_plain->message,P*sizeof(int));
 			
+			gama_cipher->message_length = enc_aes_gcm((unsigned char *)gama_plain->message,gama_plain->message_length,KF2value,(unsigned char *)gama_cipher->message);
+			
+			std::cout<<"gama_cipher->message_length is "<<gama_cipher->message_length<<std::endl;
+			
+			
+			myClient->Generate_V(V,block,gama_cipher);
+			//c++
+			CT[0]++;
 
-			
-			free(L->ciphertext);
-			free(gama);
+			free(gama_cipher->message);
+			free(gama_cipher);
+			free(gama_plain->message);
+			free(gama_plain);
+			free(L->ciphertext);		
 			free(L);
 		}
 		

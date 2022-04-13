@@ -126,7 +126,6 @@ void Client::DecryptDocCollection(std::vector<std::string> Res){
 void Client::G_AesEncrypt(Lvalue * L ,unsigned char * KF1Value,const int & v,CT_pair & CT){
     
     unsigned char * vct = (unsigned char *)malloc(3*sizeof(int));
-    // unsigned char * plaintext = (unsigned char *)malloc(3*sizeof(int));
     
     if(!vct) {
         std::cout<<"malloc error!"<<std::endl;
@@ -147,9 +146,8 @@ void Client::G_AesEncrypt(Lvalue * L ,unsigned char * KF1Value,const int & v,CT_
     // }
     
 
-
-    //问题在此处产生
-    L->ciphertext_length = enc_aes_gcm(vct,3*sizeof(int),KF1Value,(unsigned char *)L->ciphertext);
+    
+    L->ciphertext_length = enc_aes_gcm(vct,3*sizeof(int),KF1Value,L->ciphertext);
     
     // std::cout<<"cipher length is "<<L->ciphertext_length<<std::endl;
 
@@ -162,6 +160,55 @@ void Client::G_AesEncrypt(Lvalue * L ,unsigned char * KF1Value,const int & v,CT_
     // }
 
     if(vct) free(vct);
-    // free(plaintext);
+
     return;
 }
+
+void Client::Generate_V(Vvalue * V,Block & block,const Gama * gama_cipher){
+    unsigned char * ids = (unsigned char *)malloc(P*sizeof(int));
+    
+    memcpy(ids,&block[0],4);
+    memcpy(ids+4,&block[1],4);
+    memcpy(ids+8,&block[2],4);
+
+    // std::cout<<"folowing are ids"<<std::endl;
+    // for(int i = 0;i<12;i++){
+    //     printf("%x",*(ids+i));
+    //     if((i+1)%4 == 0) printf(" ");
+    // }
+
+    //将gama_cipher拷贝至V
+    memcpy(V->message,gama_cipher->message,AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*sizeof(int));
+    
+    // std::cout<<"folowing are vxor"<<std::endl;
+    // for(int i = 0;i<12;i++){
+    //     printf("%x",*(V->message+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+i));
+    //     if((i+1)%4 == 0) printf(" ");
+    // }
+
+    //对后12位进行异或
+    for(int i = 0;i<P*sizeof(int);i++){
+        *(V->message+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+i) = *(gama_cipher->message+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+i)^*(ids+i);
+    }
+
+    //验证异或
+    // std::cout<<std::endl<<"folowing are vxor2"<<std::endl;
+    // for(int i = 0;i<12;i++){
+    //     printf("%x",*(V->message+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+i));
+    //     if((i+1)%4 == 0) printf(" ");
+    // }
+
+    // for(int i = 0;i<P*sizeof(int);i++){
+    //     *(V->message+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+i) = *(V->message+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+i)^*(ids+i);
+    // }
+
+    // std::cout<<std::endl<<"folowing are vxor3"<<std::endl;
+    // for(int i = 0;i<12;i++){
+    //     printf("%x",*(V->message+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+i));
+    //     if((i+1)%4 == 0) printf(" ");
+    // }
+
+    free(ids);
+    ids = NULL;
+    return;
+ }
