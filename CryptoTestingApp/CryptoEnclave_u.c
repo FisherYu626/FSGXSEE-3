@@ -24,6 +24,12 @@ typedef struct ms_ecall_search_t {
 	size_t ms_len;
 } ms_ecall_search_t;
 
+typedef struct ms_ecall_InsertVct_t {
+	int ms_vword;
+	int ms_c;
+	int ms_t;
+} ms_ecall_InsertVct_t;
+
 typedef struct ms_ocall_print_string_t {
 	const char* ms_str;
 } ms_ocall_print_string_t;
@@ -263,6 +269,17 @@ sgx_status_t ecall_printHelloWorld(sgx_enclave_id_t eid)
 {
 	sgx_status_t status;
 	status = sgx_ecall(eid, 4, &ocall_table_CryptoEnclave, NULL);
+	return status;
+}
+
+sgx_status_t ecall_InsertVct(sgx_enclave_id_t eid, int vword, int c, int t)
+{
+	sgx_status_t status;
+	ms_ecall_InsertVct_t ms;
+	ms.ms_vword = vword;
+	ms.ms_c = c;
+	ms.ms_t = t;
+	status = sgx_ecall(eid, 5, &ocall_table_CryptoEnclave, &ms);
 	return status;
 }
 

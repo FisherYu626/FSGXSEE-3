@@ -4,6 +4,7 @@
 
 //fisher added
 #include<set>
+#include<TreeNode.h>
 
 #include "sgx_trts.h"
 #include "sgx_tcrypto.h"
@@ -32,6 +33,11 @@ std::unordered_map<std::string, int> ST;
 std::unordered_map<std::string, std::vector<std::string>> D;
 
 std::vector<std::string> d;
+
+
+//fisher added!
+
+TreeNode * N = new TreeNode();
 
 /*** setup */
 void ecall_init(unsigned char *keyF1,unsigned char *keyF2, size_t len){ 
@@ -197,8 +203,7 @@ void ecall_delDoc(char *doc_id, size_t id_length){
 }
 
 /*** search for a keyword */
-/*
-void ecall_search(const char *keyword, size_t keyword_len){
+/*void ecall_search(const char *keyword, size_t keyword_len){
 
     //init keys
     std::string keyword_str(keyword,keyword_len);
@@ -656,4 +661,11 @@ void ecall_search(const char *keyword, size_t keyword_len){
     //delete w from D
     // d.clear();
 
+}
+
+void ecall_InsertVct(int vword,int c,int t){
+
+    N->insert(N,vword,c,t);
+    
+    return;
 }

@@ -50,6 +50,12 @@ typedef struct ms_ecall_search_t {
 	size_t ms_len;
 } ms_ecall_search_t;
 
+typedef struct ms_ecall_InsertVct_t {
+	int ms_vword;
+	int ms_c;
+	int ms_t;
+} ms_ecall_InsertVct_t;
+
 typedef struct ms_ocall_print_string_t {
 	const char* ms_str;
 } ms_ocall_print_string_t;
@@ -369,38 +375,57 @@ static sgx_status_t SGX_CDECL sgx_ecall_printHelloWorld(void* pms)
 	return status;
 }
 
+static sgx_status_t SGX_CDECL sgx_ecall_InsertVct(void* pms)
+{
+	CHECK_REF_POINTER(pms, sizeof(ms_ecall_InsertVct_t));
+	//
+	// fence after pointer checks
+	//
+	sgx_lfence();
+	ms_ecall_InsertVct_t* ms = SGX_CAST(ms_ecall_InsertVct_t*, pms);
+	sgx_status_t status = SGX_SUCCESS;
+
+
+
+	ecall_InsertVct(ms->ms_vword, ms->ms_c, ms->ms_t);
+
+
+	return status;
+}
+
 SGX_EXTERNC const struct {
 	size_t nr_ecall;
-	struct {void* ecall_addr; uint8_t is_priv; uint8_t is_switchless;} ecall_table[5];
+	struct {void* ecall_addr; uint8_t is_priv; uint8_t is_switchless;} ecall_table[6];
 } g_ecall_table = {
-	5,
+	6,
 	{
 		{(void*)(uintptr_t)sgx_ecall_init, 0, 0},
 		{(void*)(uintptr_t)sgx_ecall_addDoc, 0, 0},
 		{(void*)(uintptr_t)sgx_ecall_delDoc, 0, 0},
 		{(void*)(uintptr_t)sgx_ecall_search, 0, 0},
 		{(void*)(uintptr_t)sgx_ecall_printHelloWorld, 0, 0},
+		{(void*)(uintptr_t)sgx_ecall_InsertVct, 0, 0},
 	}
 };
 
 SGX_EXTERNC const struct {
 	size_t nr_ocall;
-	uint8_t entry_table[12][5];
+	uint8_t entry_table[12][6];
 } g_dyn_entry_table = {
 	12,
 	{
-		{0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, },
 	}
 };
 

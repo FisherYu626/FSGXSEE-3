@@ -15,6 +15,7 @@
 #include<iostream>
 #include<map>
 #include <openssl/rand.h>
+#include<math.h>
 //for measurement
 #include <cstdint>
 #include <chrono>
@@ -162,7 +163,7 @@ int main()
 
 
 	/**************************fisher altered!2.0 *********************************/
-	//myServer= new Server();
+	myServer= new Server();
 
 	printf("Adding doc\n");
 
@@ -202,7 +203,8 @@ int main()
 	for(auto & DBv : DB){
 		std:: vector<Block> Blocks;
 		int vword = DBv.first;
-		int BlockNums = DBv.second.size()/P+1;
+		std::cout<<"DBV size "<<DBv.second.size()<<std::endl;
+		int BlockNums = ceil(DBv.second.size()*1.0/P);
 		std::cout<<"DBvNums size "<<BlockNums<<std::endl;
 		std::vector<int> DBvItems = DBv.second;
 
@@ -225,6 +227,7 @@ int main()
 			std::cout<<"the block "<<t<<"th num1 is "<< i[0]<<std::endl;
 			std::cout<<"the block "<<t<<"th num2 is "<< i[1]<<std::endl;
 			std::cout<<"the block "<<t<<"th num3 is "<< i[2]<<std::endl;
+			std::cout<<"the block "<<t<<"th num4 is "<< i[3]<<std::endl;
 			t++;
 		}
 
@@ -267,6 +270,8 @@ int main()
 			//c++
 			CT[0]++;
 
+			myServer->ReceiveLVR(L,V,gama_cipher);
+
 			free(gama_cipher->message);
 			free(gama_cipher);
 			free(gama_plain->message);
@@ -274,7 +279,13 @@ int main()
 			free(L->ciphertext);		
 			free(L);
 		}
+
+		VCT n;
+		n.first = vword;
+		n.second = CT;
 		
+		ecall_InsertVct(eid,n.first,n.second[0],n.second[1]);
+
 	}
 
 
@@ -363,7 +374,7 @@ int main()
 	// }
 
 	delete myClient;
-	// delete myServer;
+	delete myServer;
 
 	return 0;
 }

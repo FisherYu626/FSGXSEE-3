@@ -167,9 +167,12 @@ void Client::G_AesEncrypt(Lvalue * L ,unsigned char * KF1Value,const int & v,CT_
 void Client::Generate_V(Vvalue * V,Block & block,const Gama * gama_cipher){
     unsigned char * ids = (unsigned char *)malloc(P*sizeof(int));
     
-    memcpy(ids,&block[0],4);
-    memcpy(ids+4,&block[1],4);
-    memcpy(ids+8,&block[2],4);
+    for(int i = 0;i<P;i++){
+        memcpy(ids+4*i,&block[i],4);
+    }
+    // memcpy(ids,&block[0],4);
+    // memcpy(ids+4,&block[1],4);
+    // memcpy(ids+8,&block[2],4);
 
     // std::cout<<"folowing are ids"<<std::endl;
     // for(int i = 0;i<12;i++){

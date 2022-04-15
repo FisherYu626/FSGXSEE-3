@@ -16,6 +16,7 @@
 class Client{
     public:
         Client();
+
         void ReadNextDoc(docContent *fetch_data);
         void Del_GivenDocIndex(const int del_index, docId* delV_i);
         void Del_GivenDocArray(const int * del_arr, docId* delV, int n);
@@ -33,6 +34,7 @@ class Client{
         //fisher altered!
         unsigned char KF1[ENC_KEY_SIZE];
         unsigned char KF2[ENC_KEY_SIZE];
+
         int file_reading_counter;
 };
  

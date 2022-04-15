@@ -5,7 +5,7 @@
 #include <openssl/evp.h>
 #include <openssl/err.h>
 #include <string.h>
-
+#include <iostream>
 #include "../common/data_type.h"
  
 void handleErrors(void);

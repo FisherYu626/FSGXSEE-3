@@ -2,6 +2,7 @@
 #include <algorithm> // for std::find
 #include <iterator> // for std::begin, std::end
 
+
 Server::Server(){
   R_Doc.clear();
   M_I.clear();
@@ -137,4 +138,18 @@ void Server::Display_M_c(){
       printf("v \n");
       print_bytes((uint8_t*)(it->second).c_str(),(uint32_t)it->second.length());
   }
+}
+
+//fisher added！！
+void Server:: ReceiveLVR(Lvalue * L,Vvalue * V,Gama * gamacipher){
+  std::string l((char*)L->ciphertext,L->ciphertext_length);
+  std::string v((char*)V->message,V->message_length);
+  std::string gama((char*)gamacipher->message,gamacipher->message_length);
+  //std::cout<<std::endl<<"Imm V is "<<v<<std::endl;
+  IMM.insert(std::pair<std::string,std::vector<std::string>>(l,{v,gama}));
+
+  // std::cout<<std::endl<<"Imm V is "<<IMM[l][0]<<std::endl;
+  // std::cout<<std::endl<<"Imm gama is "<<IMM[l][1]<<std::endl;
+
+  return;
 }

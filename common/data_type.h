@@ -39,7 +39,7 @@ static unsigned char gcm_iv[] = {
 /*********************************************************/
 
 /************fisher added 2.0*********************************/
-#define P 3
+#define P 4
 /*********************************************************/
 typedef struct
 {
@@ -95,6 +95,8 @@ typedef std::pair<entryKey, entryValue> entry;
 typedef std::array<int, P> Block;
 typedef std::array<int, 2> CT_pair;
 typedef std::array<int, 3> VCT_pair;
+typedef std::pair<int,CT_pair> VCT;
+
 // yangxu add
 // std::set<int> doc_ids;
 

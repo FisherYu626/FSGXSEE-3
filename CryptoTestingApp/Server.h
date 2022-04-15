@@ -9,6 +9,10 @@ class Server{
         Server(); 
         ~Server();
         void ReceiveEncDoc(entry *encrypted_doc);
+
+        //fisher added!!
+        void ReceiveLVR(Lvalue * L,Vvalue * V,Gama * gamacipher);
+
         void ReceiveTransactions(rand_t *t1_u_arr,rand_t *t1_v_arr,
                                  rand_t *t2_u_arr,rand_t *t2_v_arr,
                                  int pair_count);
@@ -34,6 +38,10 @@ class Server{
         std::unordered_map<std::string,std::string> M_I;
         std::unordered_map<std::string,std::string> M_c;
         std::unordered_map<std::string,std::string> R_Doc;
+        
+
+        //fisher added!!
+        std::unordered_map<std::string,std::vector<std::string>> IMM;
 
 };
  

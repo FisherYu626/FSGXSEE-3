@@ -20,6 +20,7 @@ void ecall_addDoc(char* doc_id, size_t id_length, char* content, int content_len
 void ecall_delDoc(char* doc_id, size_t id_length);
 void ecall_search(const char* keyword, size_t len);
 void ecall_printHelloWorld(void);
+void ecall_InsertVct(int vword, int c, int t);
 
 sgx_status_t SGX_CDECL ocall_print_string(const char* str);
 sgx_status_t SGX_CDECL ocall_transfer_encrypted_entries(const void* t1_u_arr, const void* t1_v_arr, const void* t2_u_arr, const void* t2_v_arr, int pair_count, int rand_size);
