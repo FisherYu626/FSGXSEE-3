@@ -163,6 +163,7 @@ int main()
 
 
 	/**************************fisher altered!2.0 *********************************/
+	/**************************Build Process **************************************/
 	myServer= new Server();
 
 	printf("Adding doc\n");
@@ -201,12 +202,12 @@ int main()
 	//divide DB into p blocks
 
 	for(auto & DBv : DB){
-		std:: vector<Block> Blocks;
-		int vword = DBv.first;
+		std:: vector<Block> Blocks; //关键字对应块(v,V)
+		int vword = DBv.first; //关键字v
 		std::cout<<"DBV size "<<DBv.second.size()<<std::endl;
-		int BlockNums = ceil(DBv.second.size()*1.0/P);
+		int BlockNums = ceil(DBv.second.size()*1.0/P); //块个数 beta
 		std::cout<<"DBvNums size "<<BlockNums<<std::endl;
-		std::vector<int> DBvItems = DBv.second;
+		std::vector<int> DBvItems = DBv.second; //V={id1,id2,...,idp}
 
 
 		for(int i = 0;i<BlockNums;i++){
@@ -227,11 +228,11 @@ int main()
 			std::cout<<"the block "<<t<<"th num1 is "<< i[0]<<std::endl;
 			std::cout<<"the block "<<t<<"th num2 is "<< i[1]<<std::endl;
 			std::cout<<"the block "<<t<<"th num3 is "<< i[2]<<std::endl;
-			std::cout<<"the block "<<t<<"th num4 is "<< i[3]<<std::endl;
+			// std::cout<<"the block "<<t<<"th num4 is "<< i[3]<<std::endl;
 			t++;
 		}
 
-		CT_pair CT;
+		CT_pair CT; //(c||t)
 		CT[0] = 0;
 		CT[1] = 0;
 		
@@ -256,21 +257,21 @@ int main()
 			V->message_length = (AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4)*sizeof(unsigned char);
 			
 			
-			myClient->G_AesEncrypt(L,KF1value,vword,CT);
+			myClient->G_AesEncrypt(L,KF1value,vword,CT);//L <-- G(KF1value,vword||CT)
 
 
-			RAND_bytes(gama_plain->message,P*sizeof(int));
+			RAND_bytes(gama_plain->message,P*sizeof(int)); //生成gama
 			
-			gama_cipher->message_length = enc_aes_gcm((unsigned char *)gama_plain->message,gama_plain->message_length,KF2value,(unsigned char *)gama_cipher->message);
+			gama_cipher->message_length = enc_aes_gcm((unsigned char *)gama_plain->message,gama_plain->message_length,KF2value,(unsigned char *)gama_cipher->message); //G(KF2value,gama_plain)
 			
 			std::cout<<"gama_cipher->message_length is "<<gama_cipher->message_length<<std::endl;
 			
 			
-			myClient->Generate_V(V,block,gama_cipher);
+			myClient->Generate_V(V,block,gama_cipher);//V <-- {id1,id2,...,idp} \xor gama_cipher
 			//c++
 			CT[0]++;
 
-			myServer->ReceiveLVR(L,V,gama_cipher);
+			myServer->ReceiveLVR(L,V,gama_cipher); //store {L,V,gama} to Imm
 
 			free(gama_cipher->message);
 			free(gama_cipher);
@@ -279,15 +280,32 @@ int main()
 			free(L->ciphertext);		
 			free(L);
 		}
-
-		VCT n;
+		//invoke SGX
+		VCT n; //(v,{c||t})
 		n.first = vword;
 		n.second = CT;
-		
 		ecall_InsertVct(eid,n.first,n.second[0],n.second[1]);
 
 	}
 
+
+	/**************************Build Process end **************************************/
+
+
+	/**************************Search Process******************************************/
+
+	/**************************Generate Token******************************************/
+
+	int v = 6;
+	int cmp = 0;
+	int q = 0;
+	myClient->SetS(0);
+	T *t = myClient->Generate_Token(KF1value,v,cmp,q);
+
+	ecall_sendToken(eid,t->message,t->message_length);
+
+	free(t->message);
+	free(t);
 
 
 

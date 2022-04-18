@@ -23,28 +23,43 @@ int enc_aes_gcm(const unsigned char *plaintext, int plaintext_len,
     memcpy(output+AESGCM_MAC_SIZE,gcm_iv,AESGCM_IV_SIZE);
     
 
-
-
     int ciphertext_len=0, final_len=0;
   
     EVP_CIPHER_CTX *ctx= EVP_CIPHER_CTX_new();
     EVP_EncryptInit(ctx, EVP_aes_128_gcm(),key, gcm_iv);
 
+
+
+
     // 加密来自缓冲区的inl字节in并将加密版本写入out,实际写入字节数存于outl
     EVP_EncryptUpdate(ctx, output+ AESGCM_MAC_SIZE+ AESGCM_IV_SIZE, &ciphertext_len, plaintext, plaintext_len);
+
 
     //对密文进行填充，填充大小写入final_len
     EVP_EncryptFinal(ctx, output+ AESGCM_MAC_SIZE+ AESGCM_IV_SIZE + ciphertext_len, &final_len);
 
     std::cout<<std::endl<<"此次加密填充长度为"<<final_len<<std::endl;
-    //对上下文ctx执行特定于密码的控制操作
+    
+    // printf("AESGCM_MAC2 is \n");
+    // for(int i = 0;i<AESGCM_MAC_SIZE;i++){
+    //     printf("%x",*(output+i));
+    // }
+    // printf("\n");
+
+    //对上下文ctx执行特定于密码的控制操作,对称算法控制函数，它调用了用户实现的ctrl回调函数。 对秘钥进行消息验证码操作
     EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, AESGCM_MAC_SIZE, output);
     //从密码上下文中清除所有信息并释放与其关联的所有已分配内存，包括ctx本身。此函数应在使用密码的所有操作完成后调用，以免敏感信息保留在内存中。
     EVP_CIPHER_CTX_free(ctx);
 
     ciphertext_len = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE + ciphertext_len + final_len;
     memcpy(ciphertext,output,ciphertext_len);
-    
+
+    // printf("AESGCM_MAC3 is \n");
+    // for(int i = 0;i<AESGCM_MAC_SIZE;i++){
+    //     printf("%x ",*(output+i));
+    // }
+    // printf("\n");
+
 
     return ciphertext_len;
     

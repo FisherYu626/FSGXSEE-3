@@ -39,7 +39,7 @@ static unsigned char gcm_iv[] = {
 /*********************************************************/
 
 /************fisher added 2.0*********************************/
-#define P 4
+#define P 3
 /*********************************************************/
 typedef struct
 {
@@ -88,6 +88,17 @@ typedef struct Gama {
     unsigned char *message;
     int message_length;  // length of the entry_value
 } Gama;
+
+typedef struct T {
+    unsigned char *message;
+    int message_length;  // length of the entry_value
+} T;
+
+typedef struct K0 {
+    unsigned char *message;
+    int message_length;  // length of the entry_value
+} K0;
+
 
 
 typedef std::pair<entryKey, entryValue> entry;

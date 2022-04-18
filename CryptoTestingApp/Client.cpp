@@ -215,3 +215,84 @@ void Client::Generate_V(Vvalue * V,Block & block,const Gama * gama_cipher){
     ids = NULL;
     return;
  }
+
+int Client:: GetS(){
+    printf("Now the s is %d\n",this->s);
+    return this->s;
+}
+
+bool Client:: AddS(){
+    this->s ++;
+    return 1;
+}
+
+bool Client:: SetS(int num){
+    this->s = num;
+    return 1;
+}
+
+
+ T * Client:: Generate_Token(unsigned char * KF1Value,int v,int cmp,int q){
+    //generate 16 Bits s
+    int s = this->GetS();
+    int temp = 0;
+    unsigned char *s_text = (unsigned char *)malloc(4*sizeof(int));
+    for(int i = 0;i<3;i++){
+        memcpy(s_text+4*i,&temp,4);
+    }
+    memcpy(s_text+12,&s,4);
+
+    printf("now the s 0x is \n");
+    for(int i = 0;i<16;i++){
+        printf("%x ",*(s_text+i));
+    }
+
+
+    K0 * k0_cipher = (K0 *) malloc(sizeof(K0));
+    k0_cipher->message = (unsigned char *)malloc((AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+16)*sizeof(unsigned char));
+    k0_cipher->message_length = enc_aes_gcm(s_text,4*sizeof(int),KF1Value,k0_cipher->message);
+        
+    printf("now the k0 len is %d\n",k0_cipher->message_length);
+    printf("now the k0cipher 0x is \n");
+    for(int i = 0;i<16;i++){
+        printf("%x ",*(k0_cipher->message+28+i));
+    }
+    printf("\n");
+
+    K0 * k0 = (K0 *) malloc(sizeof(K0));
+    k0->message = (unsigned char *)malloc(4*sizeof(int));
+    memcpy(k0->message,k0_cipher->message+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE,16);
+
+    printf("now the k0 0x is \n");
+    for(int i = 0;i<16;i++){
+        printf("%x ",*(k0->message+i));
+    }
+
+    T * t = (T *)malloc(sizeof(T));
+    t->message = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+3*sizeof(int));
+    unsigned char * vmq = (unsigned char *)malloc(3*sizeof(int));
+
+    memcpy(vmq,&v,4);
+    memcpy(vmq+4,&cmp,4);
+    memcpy(vmq+8,&q,4);
+
+    t->message_length = enc_aes_gcm(vmq,3*sizeof(int),k0->message,t->message);
+    
+    printf("the len of the token is %d\n",t->message_length);
+    printf("now the token 0x is \n");
+    for(int i = 0;i<40;i++){
+        printf("%x ",*(t->message+i));
+    }
+    printf("\n");  
+
+
+
+
+    this->AddS();
+
+    free(s_text);
+    free(k0_cipher->message);
+    free(k0_cipher);
+    free(k0);
+    return t;
+}

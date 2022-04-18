@@ -38,6 +38,7 @@ std::vector<std::string> d;
 //fisher added!
 
 TreeNode * N = new TreeNode();
+int s = -1;
 
 /*** setup */
 void ecall_init(unsigned char *keyF1,unsigned char *keyF2, size_t len){ 
@@ -667,5 +668,53 @@ void ecall_InsertVct(int vword,int c,int t){
 
     N->insert(N,vword,c,t);
     
+    return;
+}
+void ecall_sendToken(unsigned char * token,int token_len){
+
+    // printf("the len of the token is %d",token_len);
+    // printf("now the token 0x is ");
+    // for(int i = 0;i<40;i++){
+    //     printf("%x",*(token+i));
+    // } 
+     
+    s++;
+    unsigned char * s_text = (unsigned char *)malloc(4*sizeof(int));
+    int temp = 0;
+    for(int i = 0;i<3;i++){
+        memcpy(s_text+4*i,&temp,4);
+    }
+    memcpy(s_text+12,&s,4);
+
+    K0 * k0_cipher = (K0 *)malloc(sizeof(K0));
+    k0_cipher->message = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+16*sizeof(unsigned char));
+    k0_cipher->message_length = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+16*sizeof(unsigned char);
+    // printf("KF1 in enclave is");
+    // print_bytes(KF1,16);
+    enc_aes_gcm(KF1,s_text,4*sizeof(int),k0_cipher->message,k0_cipher->message_length);
+    
+    // printf("k0 cipher len is %d",k0_cipher->message_length);
+    // print_bytes(k0_cipher->message,44);
+
+    K0 * k0 = (K0 *)malloc(sizeof(K0));
+    k0->message = (unsigned char *)malloc(sizeof(unsigned char));
+    k0->message_length  = 16;
+    memcpy(k0->message,k0_cipher->message+28,16);
+
+    // printf("now the k0 is");
+    // print_bytes(k0->message,16);
+    unsigned char * vmq = (unsigned char *)malloc(3*sizeof(int));
+    dec_aes_gcm(k0->message,token,token_len,vmq,3*sizeof(int));
+
+
+    //print_bytes(vmq,3*sizeof(int));
+
+
+    free(k0->message);
+    free(k0);
+    free(k0_cipher->message);
+    free(k0_cipher);
+    free(s_text);
+    free(vmq);
     return;
 }

@@ -25,6 +25,10 @@ class Client{
         void getKFValues(unsigned char * outKey1,unsigned char * outKey2);
         void G_AesEncrypt(Lvalue * L ,unsigned char * KF1Value,const int & v,CT_pair & CT);
         void Generate_V(Vvalue * V,Block & block,const Gama * gama_cipher);
+        T * Generate_Token(unsigned char * KF1Value,int v,int cmp,int q);
+        int GetS();
+        bool AddS();
+        bool SetS(int num);
 
         void EncryptDoc(const docContent *data, entry *encrypted_doc );
         void DecryptDocCollection(std::vector<std::string> Res);
@@ -34,7 +38,7 @@ class Client{
         //fisher altered!
         unsigned char KF1[ENC_KEY_SIZE];
         unsigned char KF2[ENC_KEY_SIZE];
-
+        int s;
         int file_reading_counter;
 };
  

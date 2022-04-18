@@ -56,6 +56,11 @@ typedef struct ms_ecall_InsertVct_t {
 	int ms_t;
 } ms_ecall_InsertVct_t;
 
+typedef struct ms_ecall_sendToken_t {
+	unsigned char* ms_token;
+	int ms_token_len;
+} ms_ecall_sendToken_t;
+
 typedef struct ms_ocall_print_string_t {
 	const char* ms_str;
 } ms_ocall_print_string_t;
@@ -393,11 +398,58 @@ static sgx_status_t SGX_CDECL sgx_ecall_InsertVct(void* pms)
 	return status;
 }
 
+static sgx_status_t SGX_CDECL sgx_ecall_sendToken(void* pms)
+{
+	CHECK_REF_POINTER(pms, sizeof(ms_ecall_sendToken_t));
+	//
+	// fence after pointer checks
+	//
+	sgx_lfence();
+	ms_ecall_sendToken_t* ms = SGX_CAST(ms_ecall_sendToken_t*, pms);
+	sgx_status_t status = SGX_SUCCESS;
+	unsigned char* _tmp_token = ms->ms_token;
+	int _tmp_token_len = ms->ms_token_len;
+	size_t _len_token = _tmp_token_len;
+	unsigned char* _in_token = NULL;
+
+	CHECK_UNIQUE_POINTER(_tmp_token, _len_token);
+
+	//
+	// fence after pointer checks
+	//
+	sgx_lfence();
+
+	if (_tmp_token != NULL && _len_token != 0) {
+		if ( _len_token % sizeof(*_tmp_token) != 0)
+		{
+			status = SGX_ERROR_INVALID_PARAMETER;
+			goto err;
+		}
+		_in_token = (unsigned char*)malloc(_len_token);
+		if (_in_token == NULL) {
+			status = SGX_ERROR_OUT_OF_MEMORY;
+			goto err;
+		}
+
+		if (memcpy_s(_in_token, _len_token, _tmp_token, _len_token)) {
+			status = SGX_ERROR_UNEXPECTED;
+			goto err;
+		}
+
+	}
+
+	ecall_sendToken(_in_token, _tmp_token_len);
+
+err:
+	if (_in_token) free(_in_token);
+	return status;
+}
+
 SGX_EXTERNC const struct {
 	size_t nr_ecall;
-	struct {void* ecall_addr; uint8_t is_priv; uint8_t is_switchless;} ecall_table[6];
+	struct {void* ecall_addr; uint8_t is_priv; uint8_t is_switchless;} ecall_table[7];
 } g_ecall_table = {
-	6,
+	7,
 	{
 		{(void*)(uintptr_t)sgx_ecall_init, 0, 0},
 		{(void*)(uintptr_t)sgx_ecall_addDoc, 0, 0},
@@ -405,27 +457,28 @@ SGX_EXTERNC const struct {
 		{(void*)(uintptr_t)sgx_ecall_search, 0, 0},
 		{(void*)(uintptr_t)sgx_ecall_printHelloWorld, 0, 0},
 		{(void*)(uintptr_t)sgx_ecall_InsertVct, 0, 0},
+		{(void*)(uintptr_t)sgx_ecall_sendToken, 0, 0},
 	}
 };
 
 SGX_EXTERNC const struct {
 	size_t nr_ocall;
-	uint8_t entry_table[12][6];
+	uint8_t entry_table[12][7];
 } g_dyn_entry_table = {
 	12,
 	{
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
 	}
 };
 
