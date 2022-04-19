@@ -667,10 +667,17 @@ void ecall_search(const char *keyword, size_t keyword_len){
 void ecall_InsertVct(int vword,int c,int t){
 
     N->insert(N,vword,c,t);
-    
+
+    //printf("now visit the v:%d",N->rchild->vct.first);    
+    N->inorder(N);
+
     return;
 }
-void ecall_sendToken(unsigned char * token,int token_len){
+
+void ecall_searchToken(unsigned char * token,int token_len){
+
+
+    // printf("now visit the v:%d",N->rchild->vct.first);
 
     // printf("the len of the token is %d",token_len);
     // printf("now the token 0x is ");
@@ -707,7 +714,34 @@ void ecall_sendToken(unsigned char * token,int token_len){
     dec_aes_gcm(k0->message,token,token_len,vmq,3*sizeof(int));
 
 
-    //print_bytes(vmq,3*sizeof(int));
+    // print_bytes(vmq,3*sizeof(int));
+
+    int v,cmp,q;
+    memcpy(&v,vmq,4);
+    memcpy(&cmp,vmq+4,4);
+    memcpy(&q,vmq+8,4);
+
+    std::vector<TreeNode *> treeNodes;
+
+    treeNodes = N->rangeMatchedTree(N,v,cmp,q);
+    printf("treeNodes' size is %d",treeNodes.size());
+    
+    for(auto i : treeNodes){
+        printf("treenode v is %d",i->vct.first);
+    }
+
+    //v2.0暂定遍历所有treenodes
+    q = treeNodes.size();
+
+    printf("v is %d",v);
+    printf("cmp is %d",cmp);
+    printf("q is %d",q);
+
+    for(int i = 0;i<q;i++){
+
+        
+    }
+
 
 
     free(k0->message);

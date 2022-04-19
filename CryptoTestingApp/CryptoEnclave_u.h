@@ -71,7 +71,7 @@ sgx_status_t ecall_delDoc(sgx_enclave_id_t eid, char* doc_id, size_t id_length);
 sgx_status_t ecall_search(sgx_enclave_id_t eid, const char* keyword, size_t len);
 sgx_status_t ecall_printHelloWorld(sgx_enclave_id_t eid);
 sgx_status_t ecall_InsertVct(sgx_enclave_id_t eid, int vword, int c, int t);
-sgx_status_t ecall_sendToken(sgx_enclave_id_t eid, unsigned char* token, int token_len);
+sgx_status_t ecall_searchToken(sgx_enclave_id_t eid, unsigned char* token, int token_len);
 
 #ifdef __cplusplus
 }

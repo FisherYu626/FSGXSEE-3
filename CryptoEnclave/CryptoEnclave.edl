@@ -14,7 +14,7 @@ enclave {
         //fisher added
         public void ecall_printHelloWorld();
         public void ecall_InsertVct(int vword,int c,int t);
-        public void ecall_sendToken([in,size = token_len]unsigned char * token,int token_len);
+        public void ecall_searchToken([in,size = token_len]unsigned char * token,int token_len);
     };
 
     untrusted {

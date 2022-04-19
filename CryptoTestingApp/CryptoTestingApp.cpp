@@ -14,6 +14,7 @@
 //fsiher added!
 #include<iostream>
 #include<map>
+#include<unordered_map>
 #include <openssl/rand.h>
 #include<math.h>
 //for measurement
@@ -31,7 +32,7 @@ uint64_t timeSinceEpochMillisec() {
 
 //fisher added construct DB(V)
 
-std::map<int,std::vector<int>> DB;
+std::unordered_map<int,std::vector<int>> DB;
 
 int total_file_no = (int)10;//50000;//100000
 int del_no = (int)2;//10000;//10000;
@@ -190,6 +191,10 @@ int main()
 		free(fetch_data);
 
 	}
+
+	for(auto i:DB){
+		printf("the content in Db is %d\n",i.first);
+	}
 	// cout the DB
 	// for (auto & i : DB) {
 	// 	printf("the keyword %d includes ",i.first);
@@ -296,13 +301,14 @@ int main()
 
 	/**************************Generate Token******************************************/
 
-	int v = 6;
-	int cmp = 0;
+	int v = 5;
+	int cmp = 1;
 	int q = 0;
 	myClient->SetS(0);
 	T *t = myClient->Generate_Token(KF1value,v,cmp,q);
 
-	ecall_sendToken(eid,t->message,t->message_length);
+	ecall_searchToken(eid,t->message,t->message_length);
+
 
 	free(t->message);
 	free(t);

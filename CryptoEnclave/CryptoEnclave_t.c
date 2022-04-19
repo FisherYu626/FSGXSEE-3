@@ -56,10 +56,10 @@ typedef struct ms_ecall_InsertVct_t {
 	int ms_t;
 } ms_ecall_InsertVct_t;
 
-typedef struct ms_ecall_sendToken_t {
+typedef struct ms_ecall_searchToken_t {
 	unsigned char* ms_token;
 	int ms_token_len;
-} ms_ecall_sendToken_t;
+} ms_ecall_searchToken_t;
 
 typedef struct ms_ocall_print_string_t {
 	const char* ms_str;
@@ -398,14 +398,14 @@ static sgx_status_t SGX_CDECL sgx_ecall_InsertVct(void* pms)
 	return status;
 }
 
-static sgx_status_t SGX_CDECL sgx_ecall_sendToken(void* pms)
+static sgx_status_t SGX_CDECL sgx_ecall_searchToken(void* pms)
 {
-	CHECK_REF_POINTER(pms, sizeof(ms_ecall_sendToken_t));
+	CHECK_REF_POINTER(pms, sizeof(ms_ecall_searchToken_t));
 	//
 	// fence after pointer checks
 	//
 	sgx_lfence();
-	ms_ecall_sendToken_t* ms = SGX_CAST(ms_ecall_sendToken_t*, pms);
+	ms_ecall_searchToken_t* ms = SGX_CAST(ms_ecall_searchToken_t*, pms);
 	sgx_status_t status = SGX_SUCCESS;
 	unsigned char* _tmp_token = ms->ms_token;
 	int _tmp_token_len = ms->ms_token_len;
@@ -438,7 +438,7 @@ static sgx_status_t SGX_CDECL sgx_ecall_sendToken(void* pms)
 
 	}
 
-	ecall_sendToken(_in_token, _tmp_token_len);
+	ecall_searchToken(_in_token, _tmp_token_len);
 
 err:
 	if (_in_token) free(_in_token);
@@ -457,7 +457,7 @@ SGX_EXTERNC const struct {
 		{(void*)(uintptr_t)sgx_ecall_search, 0, 0},
 		{(void*)(uintptr_t)sgx_ecall_printHelloWorld, 0, 0},
 		{(void*)(uintptr_t)sgx_ecall_InsertVct, 0, 0},
-		{(void*)(uintptr_t)sgx_ecall_sendToken, 0, 0},
+		{(void*)(uintptr_t)sgx_ecall_searchToken, 0, 0},
 	}
 };
 

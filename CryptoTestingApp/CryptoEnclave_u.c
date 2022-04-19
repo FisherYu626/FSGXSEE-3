@@ -30,10 +30,10 @@ typedef struct ms_ecall_InsertVct_t {
 	int ms_t;
 } ms_ecall_InsertVct_t;
 
-typedef struct ms_ecall_sendToken_t {
+typedef struct ms_ecall_searchToken_t {
 	unsigned char* ms_token;
 	int ms_token_len;
-} ms_ecall_sendToken_t;
+} ms_ecall_searchToken_t;
 
 typedef struct ms_ocall_print_string_t {
 	const char* ms_str;
@@ -288,10 +288,10 @@ sgx_status_t ecall_InsertVct(sgx_enclave_id_t eid, int vword, int c, int t)
 	return status;
 }
 
-sgx_status_t ecall_sendToken(sgx_enclave_id_t eid, unsigned char* token, int token_len)
+sgx_status_t ecall_searchToken(sgx_enclave_id_t eid, unsigned char* token, int token_len)
 {
 	sgx_status_t status;
-	ms_ecall_sendToken_t ms;
+	ms_ecall_searchToken_t ms;
 	ms.ms_token = token;
 	ms.ms_token_len = token_len;
 	status = sgx_ecall(eid, 6, &ocall_table_CryptoEnclave, &ms);
