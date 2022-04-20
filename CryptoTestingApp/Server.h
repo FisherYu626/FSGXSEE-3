@@ -18,6 +18,10 @@ class Server{
                                  int pair_count);
         std::string Retrieve_Encrypted_Doc(std::string del_id_str);
         std::string Retrieve_M_c(std::string u_prime_str);
+
+        void RetrieveVGama(unsigned char * L_text,int L_length,
+        unsigned char * V_text,int V_length,
+        unsigned char * Gama_text,int Gama_length);
         
         void Del_Encrypted_Doc(std::string del_id_str);
         void Del_M_c_value(std::string del_u_prime);

@@ -99,6 +99,11 @@ typedef struct K0 {
     int message_length;  // length of the entry_value
 } K0;
 
+typedef struct Qsgx{
+    int v;
+    std::unordered_map<std::string,std::vector<std::string>> LVG;
+}Qsgx;
+
 
 
 typedef std::pair<entryKey, entryValue> entry;

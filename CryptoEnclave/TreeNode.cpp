@@ -36,7 +36,7 @@ void TreeNode:: insert(TreeNode * &root,int v,int c,int t){
 void TreeNode:: inorder(TreeNode *root){
     if(!root) return;
     inorder(root->lchild);
-    printf("now visit the v:%d",root->vct.first);
+    printf("now visit the v:%d\n",root->vct.first);
     inorder(root->rchild);
 }
 

@@ -723,22 +723,73 @@ void ecall_searchToken(unsigned char * token,int token_len){
 
     std::vector<TreeNode *> treeNodes;
 
+    std::vector<Qsgx *> QsgxCache;
+
     treeNodes = N->rangeMatchedTree(N,v,cmp,q);
-    printf("treeNodes' size is %d",treeNodes.size());
+    printf("treeNodes' size is %d\n",treeNodes.size());
     
     for(auto i : treeNodes){
-        printf("treenode v is %d",i->vct.first);
+        printf("treenode v is %d\n",i->vct.first);
     }
 
     //v2.0暂定遍历所有treenodes
     q = treeNodes.size();
 
-    printf("v is %d",v);
-    printf("cmp is %d",cmp);
-    printf("q is %d",q);
+    printf("v is %d\n",v);
+    printf("cmp is %d\n",cmp);
+    printf("q is %d\n",q);
 
     for(int i = 0;i<q;i++){
 
+        if(0){
+
+        }else{
+            CT_pair ct = treeNodes[i]->vct.second;
+            int c = 0;
+            int vi,ci,ti;
+            vi = treeNodes[i]->vct.first;
+            ci = ct[0];
+            ti = ct[1];
+
+            Lvalue *L = (Lvalue *)malloc(sizeof(Lvalue));
+            Vvalue *V = (Vvalue *)malloc(sizeof(Vvalue));
+            Gama *gama_cipher = (Gama *)malloc(sizeof(Gama));
+
+            L->ciphertext = (unsigned char *)malloc((AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+3*sizeof(int))*sizeof(unsigned char));
+            L->ciphertext_length = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+3*sizeof(int);
+
+            V->message = (unsigned char *)malloc((AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4)*sizeof(unsigned char));
+            V->message_length = (AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4)*sizeof(unsigned char);
+
+            //此处后续应修改 maincpp 286行 存gama存为gamacipher
+            gama_cipher->message = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +P*sizeof(int) );
+			gama_cipher->message_length = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +P*sizeof(int);
+
+            while(c<ci){
+
+
+                Enclave_Generate_L(L,KF1,vi,c,ti);
+                
+                ocall_retrieve_VGama(L->ciphertext,L->ciphertext_length,
+                V->message,V->message_length,
+                gama_cipher->message,gama_cipher->message_length);
+                
+                /////////////////////////////////////////
+
+                c++;
+
+
+            }
+            free(L->ciphertext);		
+			free(L);
+            free(V->message);
+            free(V);
+            free(gama_cipher->message);
+            free(gama_cipher);
+            printf("treenode v is %d\n",treeNodes[i]->vct.first);
+            printf("treenode c is %d,treenode t is %d\n",treeNodes[i]->vct.second[0],treeNodes[i]->vct.second[1]);
+
+        }
         
     }
 

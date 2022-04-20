@@ -18,7 +18,7 @@ void printf( const char *fmt, ...)
 
 void print_bytes(uint8_t *ptr, uint32_t len) {
   for (uint32_t i = 0; i < len; i++) {
-    printf("%x", *(ptr + i));
+    printf("%x ", *(ptr + i));
   }
 
   printf("\n");
@@ -324,3 +324,43 @@ std::vector<int> split(std:: string s,const char flag) {
     return res;
 }
 
+void Enclave_Generate_L(Lvalue * L ,unsigned char * KF1Value,const int & vi,const int & c,const int &ti){
+unsigned char * vct = (unsigned char *)malloc(3*sizeof(int));
+    
+    // if(!vct) {
+    //     std::cout<<"malloc error!"<<std::endl;
+    //     return;
+    // }
+    // std::cout<<"V is "<<v<<std::endl;
+    // std::cout<<"C is "<<c<<std::endl;
+    // std::cout<<"T is "<<ti<<std::endl;
+
+
+    memcpy(vct,&vi,4);
+    memcpy(vct+4,&c,4);
+    memcpy(vct+8,&ti,4);
+    
+    // for(int i = 0;i<12;i++){
+    //     printf("%x",*(vct+i));
+    //     if((i+1)%4 == 0) printf(" ");
+    // }
+    
+
+    
+    //L->ciphertext_length = enc_aes_gcm(vct,3*sizeof(int),KF1Value,L->ciphertext);
+    enc_aes_gcm(KF1Value,vct,3*sizeof(int),L->ciphertext,L->ciphertext_length);
+
+    printf("enclave encrypt the L is ");
+    print_bytes(L->ciphertext,40);
+    
+    // std::cout<<"cipher length is "<<L->ciphertext_length<<std::endl;
+
+    //验证加密是否成功
+    dec_aes_gcm(KF1Value,L->ciphertext,L->ciphertext_length,vct,3*sizeof(int));
+    printf("after dec:\n");
+    print_bytes(vct,12);
+
+    if(vct) free(vct);
+
+    return;
+}

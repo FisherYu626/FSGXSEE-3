@@ -41,6 +41,14 @@ enclave {
                                [in, count= pair_count, size=rand_size] const void *Q_w_id_arr,
                                int pair_count, int rand_size);
 
+        //fisher added!!
+        void ocall_retrieve_VGama([in,size = L_length] unsigned char * L_text,
+                                        int L_length,
+                                        [out,size = V_length] unsigned char * V_text,
+                                        int V_length,
+                                        [out,size = Gama_length] unsigned char * Gama_text,
+                                        int Gama_length);
+
 
     };
 };

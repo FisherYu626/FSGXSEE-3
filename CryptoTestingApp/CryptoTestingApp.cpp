@@ -65,7 +65,7 @@ Client *myClient; //extern to separate ocall
 Server *myServer; //extern to separate ocall
 
 void ocall_print_string(const char *str) {
-    printf("%s\n", str);
+    printf("%s", str);
 }
 
 void ocall_transfer_encrypted_entries(const void *_t1_u_arr,
@@ -128,6 +128,17 @@ void ocall_query_tokens_entries(const void *Q_w_u_arr,
 	
 	//give to Client for decryption
 	myClient->DecryptDocCollection(Res);
+}
+
+void ocall_retrieve_VGama(unsigned char * L_text,int L_length,
+        unsigned char * V_text,int V_length,
+        unsigned char * Gama_text,int Gama_length){
+
+	myServer->RetrieveVGama(L_text,L_length,
+        V_text,V_length,
+        Gama_text,Gama_length);
+
+	return;
 }
 
 

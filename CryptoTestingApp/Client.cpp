@@ -149,7 +149,8 @@ void Client::G_AesEncrypt(Lvalue * L ,unsigned char * KF1Value,const int & v,CT_
     
     L->ciphertext_length = enc_aes_gcm(vct,3*sizeof(int),KF1Value,L->ciphertext);
     
-    // std::cout<<"cipher length is "<<L->ciphertext_length<<std::endl;
+    std::cout<<"cipher length is "<<L->ciphertext_length<<std::endl;
+    print_bytes(L->ciphertext,40);
 
     //验证加密是否成功
     // dec_aes_gcm((unsigned char *)L->ciphertext,L->ciphertext_length,KF1Value,plaintext);

@@ -32,6 +32,8 @@ int BitString2Ten(std::string s);
 std::string stringAdd(std::string am,int num,int len_res);
 std::vector<std::string> GetBRCm(int a,int b);
 std::vector<int> split(std:: string s,const char flag);
+
+void Enclave_Generate_L(Lvalue * L ,unsigned char * KF1Value,const int & vi,const int & c,const int &ti);
 /********************************************************/
 //improved
 //void prf_F_improve(const void *key,const void *plaintext,size_t plaintext_len, entryKey *k );

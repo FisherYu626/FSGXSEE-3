@@ -153,3 +153,28 @@ void Server:: ReceiveLVR(Lvalue * L,Vvalue * V,Gama * gamacipher){
 
   return;
 }
+
+void Server::RetrieveVGama(unsigned char * L_text,int L_length,
+        unsigned char * V_text,int V_length,
+        unsigned char * Gama_text,int Gama_length){
+
+    std::string l((char*)L_text,L_length);
+
+    std::string v = IMM[l][0];
+
+    //printf("retrieve v is %s\n",v);
+    std::string gama = IMM[l][1];
+    //printf("retrieve gama is %s\n",gama);
+
+    memcpy(V_text,(unsigned char *)v.c_str(),V_length);
+    printf("V has been retrived!!\n");
+    print_bytes(V_text,V_length);
+    
+    memcpy(Gama_text,(unsigned char *)gama.c_str(),Gama_length);
+    printf("Gama has been retrived!!\n");
+    print_bytes(Gama_text,Gama_length);
+
+
+    return;
+
+}
