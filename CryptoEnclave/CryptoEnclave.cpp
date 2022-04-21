@@ -774,32 +774,96 @@ void ecall_searchToken(unsigned char * token,int token_len){
                 V->message,V->message_length,
                 gama_cipher->message,gama_cipher->message_length);
                 
-                /////////////////////////////////////////
+                printf("now the vi is %d\n",treeNodes[i]->vct.first);
+                printf("V has been retrived!!\n");
+                print_bytes(V->message,V->message_length);
+                printf("Gama has been retrived!!\n");
+                print_bytes(gama_cipher->message,gama_cipher->message_length);
+
+                Qsgx *q = new Qsgx;
+                q->vi = treeNodes[i]->vct.first;
+                std::string Lstr((char *)L->ciphertext,L->ciphertext_length);
+                std::string Vstr((char *)V->message,V->message_length);
+                std::string Gamastr((char *)gama_cipher->message,gama_cipher->message_length);
+
+                q->LVG.insert(std::pair<std::string,std::vector<std::string>> {Lstr,{Vstr,Gamastr}});
+                
+                QsgxCache.push_back(q);
 
                 c++;
-
-
             }
+            
+            
+            Gama * gama_X_cipher = (Gama *)malloc(sizeof(Gama));
+            gama_X_cipher->message = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +3*sizeof(int));
+            gama_X_cipher->message_length = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +3*sizeof(int);
+            
+            Vvalue * vx = (Vvalue *)malloc(sizeof(Vvalue));
+            vx->message = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +3*sizeof(int));
+            vx->message_length = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +3*sizeof(int);
+
+
+            for(auto q_sgx : QsgxCache){
+                if(q_sgx->vi == vi){
+                    unsigned char gamax[3*sizeof(int)];
+                    sgx_read_rand(gamax, 3*sizeof(int));
+
+                    
+                    //验证加密
+                    // printf("here is the gama_X_cipher_unencrypt\n");
+                    // print_bytes(gama_cipher->message,gama_cipher->message_length);
+
+                    enc_aes_gcm(KF2,gamax,3*sizeof(int),gama_cipher->message,gama_cipher->message_length);
+
+                    printf("here is the gama_X_cipher_encrypted\n");
+                    print_bytes(gama_cipher->message,gama_cipher->message_length);
+
+
+
+                    Enclave_Generate_Vx(vx->message,gama_X_cipher->message,
+                    V->message,gama_cipher->message,
+                    gama_cipher->message_length);
+
+                    printf("here is the vx\n");
+                    print_bytes(vx->message,vx->message_length);
+
+                    
+                }
+            }
+            
+
+            free(gama_X_cipher->message);
+            free(gama_X_cipher);
+            free(vx->message);
+            free(vx);
+
+
             free(L->ciphertext);		
 			free(L);
+
             free(V->message);
             free(V);
+
             free(gama_cipher->message);
             free(gama_cipher);
+
             printf("treenode v is %d\n",treeNodes[i]->vct.first);
             printf("treenode c is %d,treenode t is %d\n",treeNodes[i]->vct.second[0],treeNodes[i]->vct.second[1]);
 
-        }
+        } 
         
     }
 
 
-
+    for(auto i:QsgxCache){
+        delete(i);
+    }
     free(k0->message);
     free(k0);
     free(k0_cipher->message);
     free(k0_cipher);
     free(s_text);
     free(vmq);
+
     return;
 }
