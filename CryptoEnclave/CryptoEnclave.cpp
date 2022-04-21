@@ -753,6 +753,7 @@ void ecall_searchToken(unsigned char * token,int token_len){
 
             Lvalue *L = (Lvalue *)malloc(sizeof(Lvalue));
             Vvalue *V = (Vvalue *)malloc(sizeof(Vvalue));
+            Gama *gama_plain = (Gama *)malloc(sizeof(Gama));
             Gama *gama_cipher = (Gama *)malloc(sizeof(Gama));
 
             L->ciphertext = (unsigned char *)malloc((AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+3*sizeof(int))*sizeof(unsigned char));
@@ -760,8 +761,9 @@ void ecall_searchToken(unsigned char * token,int token_len){
 
             V->message = (unsigned char *)malloc((AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4)*sizeof(unsigned char));
             V->message_length = (AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4)*sizeof(unsigned char);
-
-            //此处后续应修改 maincpp 286行 存gama存为gamacipher
+            
+            gama_plain->message = (unsigned char *)malloc(P*sizeof(int));
+            gama_plain->message_length = P*sizeof(int);
             gama_cipher->message = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +P*sizeof(int) );
 			gama_cipher->message_length = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +P*sizeof(int);
 
@@ -772,22 +774,31 @@ void ecall_searchToken(unsigned char * token,int token_len){
                 
                 ocall_retrieve_VGama(L->ciphertext,L->ciphertext_length,
                 V->message,V->message_length,
-                gama_cipher->message,gama_cipher->message_length);
+                gama_plain->message,gama_plain->message_length);
                 
                 printf("now the vi is %d\n",treeNodes[i]->vct.first);
                 printf("V has been retrived!!\n");
                 print_bytes(V->message,V->message_length);
-                printf("Gama has been retrived!!\n");
-                print_bytes(gama_cipher->message,gama_cipher->message_length);
+                printf("GamaPlain has been retrived!!\n");
+                print_bytes(gama_plain->message,gama_plain->message_length);
+                
+                //calculate the gama_cipher
+                enc_aes_gcm(KF2,gama_plain->message,gama_plain->message_length,gama_cipher->message,gama_cipher->message_length);
+
+
+                printf("generate gama_cipher success !\n");
+			    print_bytes(gama_cipher->message,gama_cipher->message_length);
 
                 Qsgx *q = new Qsgx;
                 q->vi = treeNodes[i]->vct.first;
                 std::string Lstr((char *)L->ciphertext,L->ciphertext_length);
                 std::string Vstr((char *)V->message,V->message_length);
-                std::string Gamastr((char *)gama_cipher->message,gama_cipher->message_length);
-
-                q->LVG.insert(std::pair<std::string,std::vector<std::string>> {Lstr,{Vstr,Gamastr}});
+                std::string Gamastr((char *)gama_plain->message,gama_plain->message_length);
                 
+                //save the (L,v,gama) in Q_SGX 
+                q->LVG.insert(std::pair<std::string,std::vector<std::string>> {Lstr,{Vstr,Gamastr}});
+                //printf("Gamastr len is %d,\n",Gamastr.size());
+
                 QsgxCache.push_back(q);
 
                 c++;
@@ -805,29 +816,35 @@ void ecall_searchToken(unsigned char * token,int token_len){
 
             for(auto q_sgx : QsgxCache){
                 if(q_sgx->vi == vi){
-                    unsigned char gamax[3*sizeof(int)];
-                    sgx_read_rand(gamax, 3*sizeof(int));
+                    unsigned char gama_X_plain[P*sizeof(int)];
+
+                    sgx_read_rand(gama_X_plain, P*sizeof(int));
 
                     
                     //验证加密
                     // printf("here is the gama_X_cipher_unencrypt\n");
                     // print_bytes(gama_cipher->message,gama_cipher->message_length);
 
-                    enc_aes_gcm(KF2,gamax,3*sizeof(int),gama_cipher->message,gama_cipher->message_length);
+
+                    //calculate the gama_X_cipher
+                    enc_aes_gcm(KF2,gama_X_plain,P*sizeof(int),gama_X_cipher->message,gama_X_cipher->message_length);
 
                     printf("here is the gama_X_cipher_encrypted\n");
-                    print_bytes(gama_cipher->message,gama_cipher->message_length);
-
+                    print_bytes(gama_X_cipher->message,gama_X_cipher->message_length);
 
 
                     Enclave_Generate_Vx(vx->message,gama_X_cipher->message,
-                    V->message,gama_cipher->message,
-                    gama_cipher->message_length);
+                    V->message,
+                    gama_cipher->message,gama_cipher->message_length);
+
 
                     printf("here is the vx\n");
                     print_bytes(vx->message,vx->message_length);
 
-                    
+                    ocall_receive_VxGama(vx->message,vx->message_length,
+                    gama_plain->message,gama_plain->message_length,
+                    gama_X_plain,P*sizeof(int));
+
                 }
             }
             
@@ -846,6 +863,9 @@ void ecall_searchToken(unsigned char * token,int token_len){
 
             free(gama_cipher->message);
             free(gama_cipher);
+
+            free(gama_plain->message);
+            free(gama_plain);
 
             printf("treenode v is %d\n",treeNodes[i]->vct.first);
             printf("treenode c is %d,treenode t is %d\n",treeNodes[i]->vct.second[0],treeNodes[i]->vct.second[1]);

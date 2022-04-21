@@ -141,10 +141,10 @@ void Server::Display_M_c(){
 }
 
 //fisher added！！
-void Server:: ReceiveLVR(Lvalue * L,Vvalue * V,Gama * gamacipher){
+void Server:: ReceiveLVR(Lvalue * L,Vvalue * V,Gama * gamaPlain){
   std::string l((char*)L->ciphertext,L->ciphertext_length);
   std::string v((char*)V->message,V->message_length);
-  std::string gama((char*)gamacipher->message,gamacipher->message_length);
+  std::string gama((char*)gamaPlain->message,gamaPlain->message_length);
   //std::cout<<std::endl<<"Imm V is "<<v<<std::endl;
   IMM.insert(std::pair<std::string,std::vector<std::string>>(l,{v,gama}));
 

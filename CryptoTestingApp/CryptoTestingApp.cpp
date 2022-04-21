@@ -132,11 +132,18 @@ void ocall_query_tokens_entries(const void *Q_w_u_arr,
 
 void ocall_retrieve_VGama(unsigned char * L_text,int L_length,
         unsigned char * V_text,int V_length,
-        unsigned char * Gama_text,int Gama_length){
+        unsigned char * Gama_Plain,int Gama_Plain_length){
 
 	myServer->RetrieveVGama(L_text,L_length,
         V_text,V_length,
-        Gama_text,Gama_length);
+        Gama_Plain,Gama_Plain_length);
+
+	return;
+}
+
+void ocall_receive_VxGama(unsigned char * vx_text,int vx_length,
+                    unsigned char * gama_plain,int gama_plain_len,
+                    unsigned char * gamax_plain,int gamax_plain_len){
 
 	return;
 }
@@ -283,13 +290,14 @@ int main()
 			gama_cipher->message_length = enc_aes_gcm((unsigned char *)gama_plain->message,gama_plain->message_length,KF2value,(unsigned char *)gama_cipher->message); //G(KF2value,gama_plain)
 			
 			std::cout<<"gama_cipher->message_length is "<<gama_cipher->message_length<<std::endl;
-			
+			printf("generate gama_cipher success !\n");
+			print_bytes(gama_cipher->message,gama_cipher->message_length);
 			
 			myClient->Generate_V(V,block,gama_cipher);//V <-- {id1,id2,...,idp} \xor gama_cipher
 			//c++
 			CT[0]++;
 
-			myServer->ReceiveLVR(L,V,gama_cipher); //store {L,V,gama} to Imm
+			myServer->ReceiveLVR(L,V,gama_plain); //store {L,V,gama} to Imm
 
 			free(gama_cipher->message);
 			free(gama_cipher);
