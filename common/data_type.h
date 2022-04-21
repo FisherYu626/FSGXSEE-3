@@ -100,7 +100,7 @@ typedef struct K0 {
 } K0;
 
 typedef struct Qsgx{
-    int v;
+    int vi;
     std::unordered_map<std::string,std::vector<std::string>> LVG;
 }Qsgx;
 
@@ -112,6 +112,7 @@ typedef std::array<int, P> Block;
 typedef std::array<int, 2> CT_pair;
 typedef std::array<int, 3> VCT_pair;
 typedef std::pair<int,CT_pair> VCT;
+
 
 // yangxu add
 // std::set<int> doc_ids;

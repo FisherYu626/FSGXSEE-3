@@ -34,6 +34,8 @@ std::vector<std::string> GetBRCm(int a,int b);
 std::vector<int> split(std:: string s,const char flag);
 
 void Enclave_Generate_L(Lvalue * L ,unsigned char * KF1Value,const int & vi,const int & c,const int &ti);
+void Enclave_Generate_Vx(unsigned char * vx,unsigned char * gamax_cipher,
+    unsigned char *v,unsigned char * gama_cipher,int gama_cipher_len );
 /********************************************************/
 //improved
 //void prf_F_improve(const void *key,const void *plaintext,size_t plaintext_len, entryKey *k );

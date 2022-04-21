@@ -49,6 +49,7 @@ enclave {
                                         [out,size = Gama_length] unsigned char * Gama_text,
                                         int Gama_length);
 
+        //void ocall_receive_VxGama();
 
     };
 };
