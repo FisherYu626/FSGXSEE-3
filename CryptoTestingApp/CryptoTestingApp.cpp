@@ -142,6 +142,8 @@ void ocall_retrieve_VGama(unsigned char * L_text,int L_length,
 }
 
 
+
+
 //main func
 int main()
 {
@@ -276,7 +278,7 @@ int main()
 			myClient->G_AesEncrypt(L,KF1value,vword,CT);//L <-- G(KF1value,vword||CT)
 
 
-			RAND_bytes(gama_plain->message,P*sizeof(int)); //生成gama
+			RAND_bytes(gama_plain->message,3*sizeof(int)); //生成gama
 			
 			gama_cipher->message_length = enc_aes_gcm((unsigned char *)gama_plain->message,gama_plain->message_length,KF2value,(unsigned char *)gama_cipher->message); //G(KF2value,gama_plain)
 			
