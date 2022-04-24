@@ -32,6 +32,9 @@ class Client{
 
         void EncryptDoc(const docContent *data, entry *encrypted_doc );
         void DecryptDocCollection(std::vector<std::string> Res);
+        void receive_vxGama(const unsigned char * vx_text,int vx_length,
+                const unsigned char * gama_plain,int gama_plain_len,
+                const unsigned char * gamax_plain,int gamax_plain_len);
 
     private:
         unsigned char KF[ENC_KEY_SIZE];
@@ -40,6 +43,7 @@ class Client{
         unsigned char KF2[ENC_KEY_SIZE];
         int s;
         int file_reading_counter;
+        std::unordered_map<std::string,std::vector<std::string>> VxGamaGamax;
 };
  
 #endif

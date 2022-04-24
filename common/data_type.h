@@ -101,7 +101,7 @@ typedef struct K0 {
 
 typedef struct Qsgx{
     int vi;
-    std::unordered_map<std::string,std::vector<std::string>> LVG;
+    std::pair<std::string,std::vector<std::string>> LVG;
 }Qsgx;
 
 

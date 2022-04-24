@@ -145,6 +145,9 @@ void ocall_receive_VxGama(unsigned char * vx_text,int vx_length,
                     unsigned char * gama_plain,int gama_plain_len,
                     unsigned char * gamax_plain,int gamax_plain_len){
 
+	myClient->receive_vxGama(vx_text,vx_length,
+                    gama_plain,gama_plain_len,
+                    gamax_plain,gamax_plain_len);
 	return;
 }
 
@@ -329,10 +332,13 @@ int main()
 	T *t = myClient->Generate_Token(KF1value,v,cmp,q);
 
 	ecall_searchToken(eid,t->message,t->message_length);
+	
 
+	
 
 	free(t->message);
 	free(t);
+
 
 
 

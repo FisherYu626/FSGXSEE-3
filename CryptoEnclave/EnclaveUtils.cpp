@@ -374,3 +374,12 @@ void Enclave_Generate_Vx(unsigned char * vx,unsigned char * gama_X_cipher,
 
     return;
  }
+
+bool QincludesVi(std::vector<Qsgx *> & QsgxCache,int vi){
+    
+    for(int i = 0;i<QsgxCache.size();i++){
+        if(QsgxCache[i]->vi == vi) return true;
+    }
+    
+    return false;
+}

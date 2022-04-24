@@ -740,16 +740,87 @@ void ecall_searchToken(unsigned char * token,int token_len){
     printf("q is %d\n",q);
 
     for(int i = 0;i<q;i++){
+        CT_pair ct = treeNodes[i]->vct.second;
+        int c = 0;
+        int vi,ci,ti;
+        vi = treeNodes[i]->vct.first;
+        ci = ct[0];
+        ti = ct[1];
 
-        if(0){
+        if(QincludesVi(QsgxCache,vi)){
+
+            Gama *gama_plain = (Gama *)malloc(sizeof(Gama));
+            Gama *gama_cipher = (Gama *)malloc(sizeof(Gama));
+
+            gama_plain->message = (unsigned char *)malloc(P*sizeof(int));
+            gama_plain->message_length = P*sizeof(int);
+            gama_cipher->message = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +P*sizeof(int) );
+			gama_cipher->message_length = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +P*sizeof(int);
+            
+            Vvalue *V = (Vvalue *)malloc(sizeof(Vvalue));
+            V->message = (unsigned char *)malloc((AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4)*sizeof(unsigned char));
+            V->message_length = (AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4)*sizeof(unsigned char);
+
+
+            Vvalue * vx = (Vvalue *)malloc(sizeof(Vvalue));
+            vx->message = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +3*sizeof(int));
+            vx->message_length = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +3*sizeof(int);
+
+            Gama * gama_X_cipher = (Gama *)malloc(sizeof(Gama));
+            gama_X_cipher->message = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +P*sizeof(int));
+            gama_X_cipher->message_length = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +P*sizeof(int);
+
+
+            for(int i = 0;i<QsgxCache.size();i++){
+                if(QsgxCache[i]->vi == vi){
+                    printf("Gama len is %d\n",QsgxCache[i]->LVG.second[1].size());
+                    //get gama
+                    memcpy(gama_plain->message,(unsigned char *)QsgxCache[i]->LVG.second[1].c_str(),QsgxCache[i]->LVG.second[1].size());
+
+                    //get V
+                    memcpy(V->message,(unsigned char *)QsgxCache[i]->LVG.second[0].c_str(),QsgxCache[i]->LVG.second[0].size());
+
+
+                    //generate g(gama,k2)
+                    enc_aes_gcm(KF2,gama_plain->message,gama_plain->message_length,gama_cipher->message,gama_cipher->message_length);
+
+                    //generate gama_x
+                    unsigned char gama_X_plain[P*sizeof(int)];
+                    sgx_read_rand(gama_X_plain, P*sizeof(int));
+
+                    //generate g(gama_x,k2)
+                    enc_aes_gcm(KF2,gama_X_plain,P*sizeof(int),gama_X_cipher->message,gama_X_cipher->message_length);
+
+
+                    Enclave_Generate_Vx(vx->message,gama_X_cipher->message,
+                        V->message,
+                        gama_cipher->message,gama_cipher->message_length);
+
+                    
+                    
+                    ocall_receive_VxGama(vx->message,vx->message_length,
+                    gama_plain->message,gama_plain->message_length,
+                    gama_X_plain,P*sizeof(int));
+
+                }
+            }
+
+            free(vx->message);
+            free(vx);
+
+            free(gama_X_cipher->message);
+            free(gama_X_cipher);
+            
+            free(V->message);
+            free(V->message_length);
+            
+            free(gama_cipher->message);
+            free(gama_cipher);
+
+            free(gama_plain->message);
+            free(gama_plain);
 
         }else{
-            CT_pair ct = treeNodes[i]->vct.second;
-            int c = 0;
-            int vi,ci,ti;
-            vi = treeNodes[i]->vct.first;
-            ci = ct[0];
-            ti = ct[1];
 
             Lvalue *L = (Lvalue *)malloc(sizeof(Lvalue));
             Vvalue *V = (Vvalue *)malloc(sizeof(Vvalue));
@@ -796,7 +867,10 @@ void ecall_searchToken(unsigned char * token,int token_len){
                 std::string Gamastr((char *)gama_plain->message,gama_plain->message_length);
                 
                 //save the (L,v,gama) in Q_SGX 
-                q->LVG.insert(std::pair<std::string,std::vector<std::string>> {Lstr,{Vstr,Gamastr}});
+                q->LVG.first = Lstr;
+                q->LVG.second.push_back(Vstr);
+                q->LVG.second.push_back(Gamastr);
+
                 //printf("Gamastr len is %d,\n",Gamastr.size());
 
                 QsgxCache.push_back(q);
@@ -806,8 +880,8 @@ void ecall_searchToken(unsigned char * token,int token_len){
             
             
             Gama * gama_X_cipher = (Gama *)malloc(sizeof(Gama));
-            gama_X_cipher->message = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +3*sizeof(int));
-            gama_X_cipher->message_length = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +3*sizeof(int);
+            gama_X_cipher->message = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +P*sizeof(int));
+            gama_X_cipher->message_length = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +P*sizeof(int);
             
             Vvalue * vx = (Vvalue *)malloc(sizeof(Vvalue));
             vx->message = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +3*sizeof(int));

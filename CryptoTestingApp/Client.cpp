@@ -13,6 +13,7 @@
 #include <cstring> 
 #include <openssl/rand.h>
 
+
 //fisher altered!
 Client::Client(){
     file_reading_counter=0;
@@ -233,7 +234,7 @@ bool Client:: SetS(int num){
 }
 
 
- T * Client:: Generate_Token(unsigned char * KF1Value,int v,int cmp,int q){
+T * Client:: Generate_Token(unsigned char * KF1Value,int v,int cmp,int q){
     //generate 16 Bits s
     int s = this->GetS();
     int temp = 0;
@@ -296,4 +297,23 @@ bool Client:: SetS(int num){
     free(k0_cipher);
     free(k0);
     return t;
+}
+
+void Client::receive_vxGama(const unsigned char * vx_text,int vx_length,
+                const unsigned char * gama_plain,int gama_plain_len,
+                const unsigned char * gamax_plain,int gamax_plain_len){
+    
+    std::string vx((char *)vx_text,vx_length);
+    std::string gama((char *)gama_plain,gama_plain_len);
+    std::string gamaX((char *)gamax_plain,gamax_plain_len);
+    
+
+    VxGamaGamax.insert(std::pair<std::string,std::vector<std::string>>(vx,{gama,gamaX}));
+
+    // printf("VxGamaGamaX Inserted!!!");
+    // std::cout<<VxGamaGamax[vx][0]<<std::endl;
+    // std::cout<<VxGamaGamax[vx][1]<<std::endl;
+    
+    
+    return;
 }
