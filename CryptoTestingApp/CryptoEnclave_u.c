@@ -92,14 +92,18 @@ typedef struct ms_ocall_retrieve_VGama_t {
 	int ms_Gama_length;
 } ms_ocall_retrieve_VGama_t;
 
-typedef struct ms_ocall_receive_VxGama_t {
+typedef struct ms_ocall_receive_VxGamaX_t {
 	unsigned char* ms_vx_text;
 	int ms_vx_length;
-	unsigned char* ms_gama_plain;
-	int ms_gama_plain_len;
 	unsigned char* ms_gamax_plain;
 	int ms_gamax_plain_len;
-} ms_ocall_receive_VxGama_t;
+	int ms_vi;
+} ms_ocall_receive_VxGamaX_t;
+
+typedef struct ms_ocall_receive_R_t {
+	unsigned char* ms_R;
+	int ms_R_len;
+} ms_ocall_receive_R_t;
 
 typedef struct ms_sgx_oc_cpuidex_t {
 	int* ms_cpuinfo;
@@ -193,10 +197,18 @@ static sgx_status_t SGX_CDECL CryptoEnclave_ocall_retrieve_VGama(void* pms)
 	return SGX_SUCCESS;
 }
 
-static sgx_status_t SGX_CDECL CryptoEnclave_ocall_receive_VxGama(void* pms)
+static sgx_status_t SGX_CDECL CryptoEnclave_ocall_receive_VxGamaX(void* pms)
 {
-	ms_ocall_receive_VxGama_t* ms = SGX_CAST(ms_ocall_receive_VxGama_t*, pms);
-	ocall_receive_VxGama(ms->ms_vx_text, ms->ms_vx_length, ms->ms_gama_plain, ms->ms_gama_plain_len, ms->ms_gamax_plain, ms->ms_gamax_plain_len);
+	ms_ocall_receive_VxGamaX_t* ms = SGX_CAST(ms_ocall_receive_VxGamaX_t*, pms);
+	ocall_receive_VxGamaX(ms->ms_vx_text, ms->ms_vx_length, ms->ms_gamax_plain, ms->ms_gamax_plain_len, ms->ms_vi);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL CryptoEnclave_ocall_receive_R(void* pms)
+{
+	ms_ocall_receive_R_t* ms = SGX_CAST(ms_ocall_receive_R_t*, pms);
+	ocall_receive_R(ms->ms_R, ms->ms_R_len);
 
 	return SGX_SUCCESS;
 }
@@ -243,9 +255,9 @@ static sgx_status_t SGX_CDECL CryptoEnclave_sgx_thread_set_multiple_untrusted_ev
 
 static const struct {
 	size_t nr_ocall;
-	void * table[14];
+	void * table[15];
 } ocall_table_CryptoEnclave = {
-	14,
+	15,
 	{
 		(void*)CryptoEnclave_ocall_print_string,
 		(void*)CryptoEnclave_ocall_transfer_encrypted_entries,
@@ -255,7 +267,8 @@ static const struct {
 		(void*)CryptoEnclave_ocall_del_M_c_value,
 		(void*)CryptoEnclave_ocall_query_tokens_entries,
 		(void*)CryptoEnclave_ocall_retrieve_VGama,
-		(void*)CryptoEnclave_ocall_receive_VxGama,
+		(void*)CryptoEnclave_ocall_receive_VxGamaX,
+		(void*)CryptoEnclave_ocall_receive_R,
 		(void*)CryptoEnclave_sgx_oc_cpuidex,
 		(void*)CryptoEnclave_sgx_thread_wait_untrusted_event_ocall,
 		(void*)CryptoEnclave_sgx_thread_set_untrusted_event_ocall,

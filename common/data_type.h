@@ -13,6 +13,8 @@
 #include <utility>
 #include <unordered_map>
 
+//fisher added!
+#include<map>
 /* for all sources except OCALL/ECALL */
 
 //const std::string raw_doc_dir= "streaming/"; 

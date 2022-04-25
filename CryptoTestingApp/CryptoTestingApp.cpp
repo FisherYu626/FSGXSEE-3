@@ -141,17 +141,23 @@ void ocall_retrieve_VGama(unsigned char * L_text,int L_length,
 	return;
 }
 
-void ocall_receive_VxGama(unsigned char * vx_text,int vx_length,
-                    unsigned char * gama_plain,int gama_plain_len,
-                    unsigned char * gamax_plain,int gamax_plain_len){
+void ocall_receive_VxGamaX(unsigned char * vx_text,int vx_length,
+                    unsigned char * gamax_plain,int gamax_plain_len,
+					int vi){
 
-	myClient->receive_vxGama(vx_text,vx_length,
-                    gama_plain,gama_plain_len,
-                    gamax_plain,gamax_plain_len);
+	myClient->receive_vxGamaX(vx_text,vx_length,
+                    gamax_plain,gamax_plain_len,
+					vi);
 	return;
 }
 
+void ocall_receive_R(unsigned char *R,int R_len){
+	printf("here is R content:\n");
+	print_bytes(R,36);
 
+	myClient->DecryptR2Ids(R,R_len);
+	return;
+}
 
 
 //main func
@@ -232,6 +238,8 @@ int main()
 	for(auto & DBv : DB){
 		std:: vector<Block> Blocks; //关键字对应块(v,V)
 		int vword = DBv.first; //关键字v
+
+		printf("now divide the block of v %d\n",vword);
 		std::cout<<"DBV size "<<DBv.second.size()<<std::endl;
 		int BlockNums = ceil(DBv.second.size()*1.0/P); //块个数 beta
 		std::cout<<"DBvNums size "<<BlockNums<<std::endl;
@@ -313,6 +321,10 @@ int main()
 		VCT n; //(v,{c||t})
 		n.first = vword;
 		n.second = CT;
+
+		printf("before insert into N!!!\n");
+		printf("v is %d \n",n.first);
+		printf("c is %d\n",n.second[0]);
 		ecall_InsertVct(eid,n.first,n.second[0],n.second[1]);
 
 	}
@@ -325,10 +337,12 @@ int main()
 
 	/**************************Generate Token******************************************/
 
-	int v = 5;
+	int v = 3;
 	int cmp = 1;
 	int q = 0;
 	myClient->SetS(0);
+
+	//cmp 1是 <= 0是>=
 	T *t = myClient->Generate_Token(KF1value,v,cmp,q);
 
 	ecall_searchToken(eid,t->message,t->message_length);

@@ -21,4 +21,5 @@ public:
     void inorder(TreeNode *root);
     std::vector<TreeNode *> rangeMatchedTree(TreeNode *root,int v,int cmp,int q);
     void rangeSearchTree(TreeNode *root,int v,int cmp,int q,std::vector<TreeNode*> &res);
+
 };

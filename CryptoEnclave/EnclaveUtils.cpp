@@ -6,6 +6,7 @@
 #include "../common/data_type.h"
 #include "sstream"
 
+
 void printf( const char *fmt, ...)
 {
     char buf[BUFSIZ] = {'\0'};
@@ -383,3 +384,8 @@ bool QincludesVi(std::vector<Qsgx *> & QsgxCache,int vi){
     
     return false;
 }
+
+// bool treeNodesSort(TreeNode *a,TreeNode *b){
+
+//     return (a->vct.first)<(b->vct.first);
+// }

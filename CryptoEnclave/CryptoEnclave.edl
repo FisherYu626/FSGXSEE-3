@@ -49,9 +49,11 @@ enclave {
                                         [out,size = Gama_length] unsigned char * Gama_text,
                                         int Gama_length);
 
-        void ocall_receive_VxGama([in,size = vx_length] unsigned char * vx_text,int vx_length,
-                    [in,size = gama_plain_len] unsigned char * gama_plain,int gama_plain_len,
-                    [in,size = gamax_plain_len ] unsigned char * gamax_plain,int gamax_plain_len);
+        void ocall_receive_VxGamaX([in,size = vx_length] unsigned char * vx_text,int vx_length,
+                    [in,size = gamax_plain_len ] unsigned char * gamax_plain,int gamax_plain_len,
+                    int vi);
+
+        void ocall_receive_R([in,size = R_len] unsigned char *R,int R_len);
 
     };
 };

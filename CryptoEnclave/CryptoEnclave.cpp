@@ -727,6 +727,11 @@ void ecall_searchToken(unsigned char * token,int token_len){
 
     treeNodes = N->rangeMatchedTree(N,v,cmp,q);
     printf("treeNodes' size is %d\n",treeNodes.size());
+
+    //对N[vi]根据vi值进行排序
+    sort(treeNodes.begin(),treeNodes.end(),[](TreeNode * a,TreeNode *b){
+        return (a->vct.first) < (b->vct.first);
+    });
     
     for(auto i : treeNodes){
         printf("treenode v is %d\n",i->vct.first);
@@ -741,11 +746,15 @@ void ecall_searchToken(unsigned char * token,int token_len){
 
     for(int i = 0;i<q;i++){
         CT_pair ct = treeNodes[i]->vct.second;
-        int c = 0;
+
         int vi,ci,ti;
         vi = treeNodes[i]->vct.first;
         ci = ct[0];
         ti = ct[1];
+        
+        printf("vi is %d\n",vi);
+        printf("ci is %d\n",ci);
+        printf("ti is %d\n",ti);
 
         if(QincludesVi(QsgxCache,vi)){
 
@@ -798,9 +807,9 @@ void ecall_searchToken(unsigned char * token,int token_len){
 
                     
                     
-                    ocall_receive_VxGama(vx->message,vx->message_length,
-                    gama_plain->message,gama_plain->message_length,
-                    gama_X_plain,P*sizeof(int));
+                    ocall_receive_VxGamaX(vx->message,vx->message_length,
+                    gama_X_plain,P*sizeof(int),
+                    vi);
 
                 }
             }
@@ -812,7 +821,7 @@ void ecall_searchToken(unsigned char * token,int token_len){
             free(gama_X_cipher);
             
             free(V->message);
-            free(V->message_length);
+            free(V);
             
             free(gama_cipher->message);
             free(gama_cipher);
@@ -821,6 +830,7 @@ void ecall_searchToken(unsigned char * token,int token_len){
             free(gama_plain);
 
         }else{
+            int c = 0;
 
             Lvalue *L = (Lvalue *)malloc(sizeof(Lvalue));
             Vvalue *V = (Vvalue *)malloc(sizeof(Vvalue));
@@ -839,8 +849,8 @@ void ecall_searchToken(unsigned char * token,int token_len){
 			gama_cipher->message_length = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +P*sizeof(int);
 
             while(c<ci){
-
-
+                printf("now the vi is %d\n",vi);
+                printf("now the c is %d\n",c);
                 Enclave_Generate_L(L,KF1,vi,c,ti);
                 
                 ocall_retrieve_VGama(L->ciphertext,L->ciphertext_length,
@@ -866,7 +876,7 @@ void ecall_searchToken(unsigned char * token,int token_len){
                 std::string Vstr((char *)V->message,V->message_length);
                 std::string Gamastr((char *)gama_plain->message,gama_plain->message_length);
                 
-                //save the (L,v,gama) in Q_SGX 
+                //save the (L,V,gama) in Q_SGX 
                 q->LVG.first = Lstr;
                 q->LVG.second.push_back(Vstr);
                 q->LVG.second.push_back(Gamastr);
@@ -915,9 +925,11 @@ void ecall_searchToken(unsigned char * token,int token_len){
                     printf("here is the vx\n");
                     print_bytes(vx->message,vx->message_length);
 
-                    ocall_receive_VxGama(vx->message,vx->message_length,
-                    gama_plain->message,gama_plain->message_length,
-                    gama_X_plain,P*sizeof(int));
+                    printf("\nsend vi %d to VxGamaX \n\n",vi);
+
+                    ocall_receive_VxGamaX(vx->message,vx->message_length,
+                    gama_X_plain,P*sizeof(int),
+                    vi);
 
                 }
             }
@@ -948,6 +960,26 @@ void ecall_searchToken(unsigned char * token,int token_len){
         
     }
 
+    int vq = treeNodes[q-1]->vct.first;
+    int n = treeNodes.size();
+
+    printf("vq is%d\n",vq);
+    printf("n is%d\n",n);
+
+    //8 为2*sizeof(int)
+    unsigned char vqn[2*sizeof(int)];
+
+    memcpy(vqn,&vq,4);
+    memcpy(vqn+4,&n,4);
+
+    unsigned char R[AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+2*sizeof(int)];
+    int R_len  = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+2*sizeof(int);
+
+    enc_aes_gcm(k0->message,vqn,2*sizeof(int),R,R_len);
+    printf("here is k0 content in enclave\n");
+    print_bytes(k0->message,k0->message_length);    
+
+    ocall_receive_R(R,R_len);
 
     for(auto i:QsgxCache){
         delete(i);

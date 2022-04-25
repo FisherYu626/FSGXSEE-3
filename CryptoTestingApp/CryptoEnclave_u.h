@@ -48,9 +48,13 @@ void SGX_UBRIDGE(SGX_NOCONVENTION, ocall_query_tokens_entries, (const void* Q_w_
 #define OCALL_RETRIEVE_VGAMA_DEFINED__
 void SGX_UBRIDGE(SGX_NOCONVENTION, ocall_retrieve_VGama, (unsigned char* L_text, int L_length, unsigned char* V_text, int V_length, unsigned char* Gama_text, int Gama_length));
 #endif
-#ifndef OCALL_RECEIVE_VXGAMA_DEFINED__
-#define OCALL_RECEIVE_VXGAMA_DEFINED__
-void SGX_UBRIDGE(SGX_NOCONVENTION, ocall_receive_VxGama, (unsigned char* vx_text, int vx_length, unsigned char* gama_plain, int gama_plain_len, unsigned char* gamax_plain, int gamax_plain_len));
+#ifndef OCALL_RECEIVE_VXGAMAX_DEFINED__
+#define OCALL_RECEIVE_VXGAMAX_DEFINED__
+void SGX_UBRIDGE(SGX_NOCONVENTION, ocall_receive_VxGamaX, (unsigned char* vx_text, int vx_length, unsigned char* gamax_plain, int gamax_plain_len, int vi));
+#endif
+#ifndef OCALL_RECEIVE_R_DEFINED__
+#define OCALL_RECEIVE_R_DEFINED__
+void SGX_UBRIDGE(SGX_NOCONVENTION, ocall_receive_R, (unsigned char* R, int R_len));
 #endif
 #ifndef SGX_OC_CPUIDEX_DEFINED__
 #define SGX_OC_CPUIDEX_DEFINED__

@@ -265,10 +265,18 @@ T * Client:: Generate_Token(unsigned char * KF1Value,int v,int cmp,int q){
     k0->message = (unsigned char *)malloc(4*sizeof(int));
     memcpy(k0->message,k0_cipher->message+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE,16);
 
+    printf("here is k0 content\n");
+    print_bytes(k0->message,16);    
+
+    //save k0 into myclient
+    
+    memcpy(this->KF0,k0->message,16);
+
+    printf("now the k0 in client is\n");
+    print_bytes(KF0,16);
+
     printf("now the k0 0x is \n");
-    for(int i = 0;i<16;i++){
-        printf("%x ",*(k0->message+i));
-    }
+    print_bytes(k0->message,16);
 
     T * t = (T *)malloc(sizeof(T));
     t->message = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+3*sizeof(int));
@@ -299,21 +307,57 @@ T * Client:: Generate_Token(unsigned char * KF1Value,int v,int cmp,int q){
     return t;
 }
 
-void Client::receive_vxGama(const unsigned char * vx_text,int vx_length,
-                const unsigned char * gama_plain,int gama_plain_len,
-                const unsigned char * gamax_plain,int gamax_plain_len){
+void Client::receive_vxGamaX(const unsigned char * vx_text,int vx_length,
+                const unsigned char * gamax_plain,int gamax_plain_len,
+                int vi){
     
     std::string vx((char *)vx_text,vx_length);
-    std::string gama((char *)gama_plain,gama_plain_len);
     std::string gamaX((char *)gamax_plain,gamax_plain_len);
     
 
-    VxGamaGamax.insert(std::pair<std::string,std::vector<std::string>>(vx,{gama,gamaX}));
+    ViVxGamaX.insert(std::pair<int,std::vector<std::string>>(vi,{vx,gamaX}));
 
     // printf("VxGamaGamaX Inserted!!!");
     // std::cout<<VxGamaGamax[vx][0]<<std::endl;
     // std::cout<<VxGamaGamax[vx][1]<<std::endl;
     
     
+    return;
+}
+
+void Client::DecryptR2Ids(unsigned char * R,int R_len){
+    unsigned char vqn[2*sizeof(int)];
+    int vqn_len = dec_aes_gcm(R,R_len,KF0,vqn);
+    //printf("vqn_len is %d\n",vqn_len);
+
+    // printf("here is k0 content\n");
+    // print_bytes(KF0,16);
+
+    int vq;
+    int n;
+
+    //memcpy的第三个参数必须用无符号变量
+    memcpy(&vq,vqn,4);
+    memcpy(&n,vqn+4,4);
+    printf("vq is %d \n",vq);
+    printf("n is %d \n",n);
+
+    std::string vx;
+    //std::string gama;
+    std::string gama_X;
+
+
+    printf("now the VxGamagamaX size is %d\n",ViVxGamaX.size());
+
+    for(auto i : ViVxGamaX){
+        printf("ViVxgamaX vi is %d\n",i.first);
+        // printf("ViVxgamaX vx is %s\n",i.second[0]);
+        // printf("ViVxgamaX gamax is %s\n",i.second[1]);
+    }
+
+    for(int i = 0; i<n;i++){
+
+    }
+
     return;
 }
