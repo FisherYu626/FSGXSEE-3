@@ -37,7 +37,7 @@ std::vector<std::string> d;
 
 //fisher added!
 
-TreeNode * N = new TreeNode();
+TreeNode * N;
 int s = -1;
 
 /*** setup */
@@ -666,6 +666,8 @@ void ecall_search(const char *keyword, size_t keyword_len){
 
 void ecall_InsertVct(int vword,int c,int t){
 
+
+
     N->insert(N,vword,c,t);
 
     //printf("now visit the v:%d",N->rchild->vct.first);    
@@ -911,6 +913,11 @@ void ecall_searchToken(unsigned char * token,int token_len){
 
 
                     //calculate the gama_X_cipher
+                    printf("here is the gama_X_plain \n");
+                    print_bytes(gama_X_plain,P*sizeof(int));
+
+                    printf("here is the KF2 \n");
+                    print_bytes(KF2,40);
                     enc_aes_gcm(KF2,gama_X_plain,P*sizeof(int),gama_X_cipher->message,gama_X_cipher->message_length);
 
                     printf("here is the gama_X_cipher_encrypted\n");

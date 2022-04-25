@@ -46,6 +46,7 @@ class Client{
         int s;
         int file_reading_counter;
         std::multimap<int,std::vector<std::string>> ViVxGamaX;
+        std::unordered_map<int,std::vector<int>> Qresult;
 };
  
 #endif

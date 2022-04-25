@@ -370,7 +370,8 @@ void Enclave_Generate_Vx(unsigned char * vx,unsigned char * gama_X_cipher,
     unsigned char *v,unsigned char * gama_cipher,int gama_cipher_len ){
     
     for(int i = 0;i<gama_cipher_len;i++){
-        *(vx+i) = *(v+i)^*(gama_cipher+i)^*(gama_X_cipher+i);
+        // *(vx+i) = *(v+i)^*(gama_cipher+i)^*(gama_X_cipher+i);
+        *(vx+i) = *(v+i)^*(gama_cipher+i);
     }
 
     return;

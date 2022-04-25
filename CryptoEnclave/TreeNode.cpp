@@ -28,9 +28,6 @@ void TreeNode:: insert(TreeNode * &root,int v,int c,int t){
         insert(root->rchild,v,c,t);
     }else if(root->vct.first>v){
         insert(root->lchild,v,c,t);
-    }else if(root->vct.first == v){
-        root->vct.second[0] = c;
-        root->vct.second[1] = t;
     }
     
     return;
