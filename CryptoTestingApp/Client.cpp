@@ -351,7 +351,7 @@ void Client::DecryptR2Ids(unsigned char * R,int R_len){
 
     for(auto i : ViVxGamaX){
         printf("ViVxgamaX vi is %d\n",i.first);
-        // printf("ViVxgamaX vx is %s\n",i.second[0]);
+        // printf("ViVxgamaX vx is %s\n",i.second[0]);y
         // printf("ViVxgamaX gamax is %s\n",i.second[1]);
     }
 
