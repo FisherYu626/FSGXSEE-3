@@ -343,22 +343,34 @@ int main()
 
 	/**************************Generate Token******************************************/
 
-	int v = 1;
+	int v = 3;
 	int cmp = 1;
 	int q = 0;
 	myClient->SetS(0);
 
 	//cmp 1是 <= 0是>=
+	uint64_t start_add_time =  timeSinceEpochMillisec(); 
+
 	T *t = myClient->Generate_Token(KF1value,v,cmp,q);
 
+	
 	ecall_searchToken(eid,t->message,t->message_length);
+	
+	uint64_t end_add_time =  timeSinceEpochMillisec(); //插入操作结束时间
+	std::cout << "********Time for first search********" << std::endl;
+	std::cout << "Total time:" << end_add_time-start_add_time << " ms" << std::endl;
 	
 
 
+
+	uint64_t start_add_time2 =  timeSinceEpochMillisec(); 
 	T *tt = myClient->Generate_Token(KF1value,v,cmp,q);
 
 	ecall_searchToken(eid,tt->message,tt->message_length);
 
+	uint64_t end_add_time2 =  timeSinceEpochMillisec(); //插入操作结束时间
+	std::cout << "********Time for second search********" << std::endl;
+	std::cout << "Total time:" << end_add_time2-start_add_time2 << " ms" << std::endl;
 	
 
 	free(t->message);
