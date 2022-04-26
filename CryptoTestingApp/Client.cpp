@@ -411,6 +411,11 @@ void Client::DecryptR2Ids(unsigned char * R,int R_len){
         }
     }
 
+    //解密所有的ids后释放ViVxGama 缓存
+    while(!ViVxGamaX.empty()){
+        ViVxGamaX.erase(ViVxGamaX.begin()->first);
+    }
+
     free(V);
 
     free(vx->message);

@@ -35,10 +35,14 @@ std::unordered_map<std::string, std::vector<std::string>> D;
 std::vector<std::string> d;
 
 
+
 //fisher added!
 
 TreeNode * N;
 int s = -1;
+//会产生内存泄露
+std::vector<Qsgx *> QsgxCache;
+
 
 /*** setup */
 void ecall_init(unsigned char *keyF1,unsigned char *keyF2, size_t len){ 
@@ -725,7 +729,6 @@ void ecall_searchToken(unsigned char * token,int token_len){
 
     std::vector<TreeNode *> treeNodes;
 
-    std::vector<Qsgx *> QsgxCache;
 
     treeNodes = N->rangeMatchedTree(N,v,cmp,q);
     printf("treeNodes' size is %d\n",treeNodes.size());
@@ -760,6 +763,7 @@ void ecall_searchToken(unsigned char * token,int token_len){
 
         if(QincludesVi(QsgxCache,vi)){
 
+
             Gama *gama_plain = (Gama *)malloc(sizeof(Gama));
             Gama *gama_cipher = (Gama *)malloc(sizeof(Gama));
 
@@ -769,13 +773,13 @@ void ecall_searchToken(unsigned char * token,int token_len){
 			gama_cipher->message_length = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +P*sizeof(int);
             
             Vvalue *V = (Vvalue *)malloc(sizeof(Vvalue));
-            V->message = (unsigned char *)malloc((AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4)*sizeof(unsigned char));
-            V->message_length = (AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4)*sizeof(unsigned char);
+            V->message = (unsigned char *)malloc((AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*sizeof(int))*sizeof(unsigned char));
+            V->message_length = (AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*sizeof(int))*sizeof(unsigned char);
 
 
             Vvalue * vx = (Vvalue *)malloc(sizeof(Vvalue));
-            vx->message = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +3*sizeof(int));
-            vx->message_length = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +3*sizeof(int);
+            vx->message = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +P*sizeof(int));
+            vx->message_length = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +P*sizeof(int);
 
             Gama * gama_X_cipher = (Gama *)malloc(sizeof(Gama));
             gama_X_cipher->message = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +P*sizeof(int));
@@ -1007,9 +1011,7 @@ void ecall_searchToken(unsigned char * token,int token_len){
 
     ocall_receive_R(R,R_len);
 
-    for(auto i:QsgxCache){
-        delete(i);
-    }
+
     free(k0->message);
     free(k0);
     free(k0_cipher->message);

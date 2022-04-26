@@ -355,17 +355,17 @@ int main()
 	
 
 
-	// T *tt = myClient->Generate_Token(KF1value,v,cmp,q);
+	T *tt = myClient->Generate_Token(KF1value,v,cmp,q);
 
-	// ecall_searchToken(eid,tt->message,tt->message_length);
+	ecall_searchToken(eid,tt->message,tt->message_length);
 
 	
 
 	free(t->message);
 	free(t);
 
-	// free(tt->message);
-	// free(tt);
+	free(tt->message);
+	free(tt);
 
 
 
