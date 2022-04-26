@@ -199,6 +199,16 @@ void Client::Generate_V(Vvalue * V,Block & block,const Gama * gama_cipher){
         *(V->message+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+i) = *(gama_cipher->message+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+i)^*(ids+i);
     }
 
+    printf("after xor V is \n");
+    print_bytes(V->message,40);
+
+
+    // printf("test the xor\n");
+    //     for(int i = 0;i<P*sizeof(int);i++){
+    //     *(V->message+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+i) = *(gama_cipher->message+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+i)^*(V->message+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+i);
+    // }
+    // print_bytes(V->message,40);
+
     //验证异或
     // std::cout<<std::endl<<"folowing are vxor2"<<std::endl;
     // for(int i = 0;i<12;i++){
@@ -329,88 +339,88 @@ void Client::receive_vxGamaX(const unsigned char * vx_text,int vx_length,
 }
 
 void Client::DecryptR2Ids(unsigned char * R,int R_len){
-    // unsigned char vqn[2*sizeof(int)];
-    // int vqn_len = dec_aes_gcm(R,R_len,KF0,vqn);
-    // //printf("vqn_len is %d\n",vqn_len);
+    unsigned char vqn[2*sizeof(int)];
+    int vqn_len = dec_aes_gcm(R,R_len,KF0,vqn);
+    //printf("vqn_len is %d\n",vqn_len);
 
-    // // printf("here is k0 content\n");
-    // // print_bytes(KF0,16);
+    // printf("here is k0 content\n");
+    // print_bytes(KF0,16);
 
-    // int vq;
-    // int n;
+    int vq;
+    int n;
 
-    // //memcpy的第三个参数必须用无符号变量
-    // memcpy(&vq,vqn,4);
-    // memcpy(&n,vqn+4,4);
-    // printf("vq is %d \n",vq);
-    // printf("n is %d \n",n);
+    //memcpy的第三个参数必须用无符号变量
+    memcpy(&vq,vqn,4);
+    memcpy(&n,vqn+4,4);
+    printf("vq is %d \n",vq);
+    printf("n is %d \n",n);
 
-    // // std::string vx;
-    // // //std::string gama;
-    // // std::string gama_X;
-
-
-    // for(auto i : ViVxGamaX){
-    //     printf("ViVxgamaX vi is %d\n",i.first);
-    //     // printf("ViVxgamaX vx is %s\n",i.second[0]);y
-    //     // printf("ViVxgamaX gamax is %s\n",i.second[1]);
-    // }
+    // std::string vx;
+    // //std::string gama;
+    // std::string gama_X;
 
 
-    // Vvalue *vx = (Vvalue *)malloc(sizeof(Vvalue));
-    // Gama *gama_X = (Gama *) malloc(sizeof(Gama));
-    // Gama *Gama_X_cipher =(Gama *) malloc(sizeof(Gama));
+    for(auto i : ViVxGamaX){
+        printf("ViVxgamaX vi is %d\n",i.first);
+        // printf("ViVxgamaX vx is %s\n",i.second[0]);y
+        // printf("ViVxgamaX gamax is %s\n",i.second[1]);
+    }
 
 
-    // vx->message = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*sizeof(int));
-    // gama_X->message = (unsigned char *)malloc(P*sizeof(int));
-    // Gama_X_cipher->message = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*sizeof(int));
+    Vvalue *vx = (Vvalue *)malloc(sizeof(Vvalue));
+    Gama *gama_X = (Gama *) malloc(sizeof(Gama));
+    Gama *Gama_X_cipher =(Gama *) malloc(sizeof(Gama));
 
-    // unsigned char* V = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*sizeof(int));
 
-    // for(auto i : ViVxGamaX){
-    //     std::vector<int> res;
-    //     if(Qresult.count(i.first)){
+    vx->message = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*sizeof(int));
+    gama_X->message = (unsigned char *)malloc(P*sizeof(int));
+    Gama_X_cipher->message = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*sizeof(int));
 
-    //     }else{
-    //         std::pair<int,std::vector<int>> temp;
+    unsigned char* V = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*sizeof(int));
 
-    //         memcpy(vx->message,i.second[0].c_str(),40);
-    //         vx->message_length = i.second[0].length();
+    for(auto i : ViVxGamaX){
+        std::vector<int> res;
+        if(Qresult.count(i.first)){
 
-    //         memcpy(gama_X->message,(unsigned char *)i.second[1].c_str(),40);
-    //         gama_X->message_length  = i.second[1].length();
+        }else{
+            std::pair<int,std::vector<int>> temp;
 
-    //         printf("here is the gama_X_pkain \n");
-    //         print_bytes(gama_X->message,gama_X->message_length);
+            memcpy(vx->message,i.second[0].c_str(),40);
+            vx->message_length = i.second[0].length();
 
-    //         printf("here is the KF2 \n");
-    //         print_bytes(KF2,40);
+            memcpy(gama_X->message,(unsigned char *)i.second[1].c_str(),40);
+            gama_X->message_length  = i.second[1].length();
 
-    //         Gama_X_cipher->message_length = enc_aes_gcm(gama_X->message,gama_X->message_length,KF2,Gama_X_cipher->message);
+            printf("here is the gama_X_pkain \n");
+            print_bytes(gama_X->message,gama_X->message_length);
 
-    //         printf("here is gama_X_Cipher in Decrpt ids\n");
-    //         print_bytes(Gama_X_cipher->message,40);
+            printf("here is the KF2 \n");
+            print_bytes(KF2,40);
 
-    //         for(int i = 0;i<AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*sizeof(int);i++){
-    //             *(V+i) = *(vx->message+i)^*(Gama_X_cipher->message+i);
-    //         }
+            Gama_X_cipher->message_length = enc_aes_gcm(gama_X->message,gama_X->message_length,KF2,Gama_X_cipher->message);
 
-    //         printf("here are ids\n");
-    //         print_bytes(V,40);
-    //     }
-    // }
+            printf("here is gama_X_Cipher in Decrpt ids\n");
+            print_bytes(Gama_X_cipher->message,40);
 
-    // free(V);
+            for(int i = 0;i<AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*sizeof(int);i++){
+                *(V+i) = *(vx->message+i)^*(Gama_X_cipher->message+i);
+            }
 
-    // free(vx->message);
-    // free(vx);
+            printf("here are ids\n");
+            print_bytes(V,40);
+        }
+    }
 
-    // free(gama_X->message);
-    // free(gama_X);
+    free(V);
 
-    // free(Gama_X_cipher->message);
-    // free(Gama_X_cipher);
+    free(vx->message);
+    free(vx);
+
+    free(gama_X->message);
+    free(gama_X);
+
+    free(Gama_X_cipher->message);
+    free(Gama_X_cipher);
 
     return;
 }

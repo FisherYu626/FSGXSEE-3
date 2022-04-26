@@ -367,12 +367,27 @@ unsigned char * vct = (unsigned char *)malloc(3*sizeof(int));
 }
 
 void Enclave_Generate_Vx(unsigned char * vx,unsigned char * gama_X_cipher,
-    unsigned char *v,unsigned char * gama_cipher,int gama_cipher_len ){
+    unsigned char *V,unsigned char * gama_cipher,int gama_cipher_len ){
+
+    printf("this is V retrived!!!\n");
+    print_bytes(V,40);
     
+    //先跟后12个字节进行解xor
+    for(int i = 0;i<P*sizeof(int);i++){
+        // *(vx+i) = *(v+i)^*(gama_cipher+i)^*(gama_X_cipher+i);
+        *(vx+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+i) = *(V+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+i)^*(gama_cipher+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+i);
+    }
+
+    printf("here is v decrypt from xor \n");
+    print_bytes(vx,40);
+
+    //再重新用 gama_X_cipher 对 V进行xor
     for(int i = 0;i<gama_cipher_len;i++){
         // *(vx+i) = *(v+i)^*(gama_cipher+i)^*(gama_X_cipher+i);
-        *(vx+i) = *(v+i)^*(gama_cipher+i);
+        *(vx+i) = *(vx+i)^*(gama_X_cipher+i);
     }
+
+
 
     return;
  }

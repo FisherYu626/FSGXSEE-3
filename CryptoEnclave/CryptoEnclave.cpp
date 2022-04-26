@@ -783,6 +783,8 @@ void ecall_searchToken(unsigned char * token,int token_len){
 
 
             for(int i = 0;i<QsgxCache.size();i++){
+                //严重问题！！
+
                 if(QsgxCache[i]->vi == vi){
                     printf("Gama len is %d\n",QsgxCache[i]->LVG.second[1].size());
                     //get gama
@@ -868,6 +870,8 @@ void ecall_searchToken(unsigned char * token,int token_len){
                 //calculate the gama_cipher
                 enc_aes_gcm(KF2,gama_plain->message,gama_plain->message_length,gama_cipher->message,gama_cipher->message_length);
 
+                printf("KF2 is\n");
+			    print_bytes(KF2,16);
 
                 printf("generate gama_cipher success !\n");
 			    print_bytes(gama_cipher->message,gama_cipher->message_length);
@@ -907,10 +911,25 @@ void ecall_searchToken(unsigned char * token,int token_len){
                     sgx_read_rand(gama_X_plain, P*sizeof(int));
 
                     
+                    //此处有严重逻辑问题！！
                     //验证加密
-                    // printf("here is the gama_X_cipher_unencrypt\n");
-                    // print_bytes(gama_cipher->message,gama_cipher->message_length);
 
+
+                    memcpy(gama_plain->message ,q_sgx->LVG.second[1].c_str(),(size_t)P*sizeof(int));
+                    printf("here is the gama_plain\n");
+                    print_bytes(gama_plain->message,12);
+
+                    memcpy(V->message,q_sgx->LVG.second[0].c_str(),AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +P*sizeof(int));
+                    
+                    enc_aes_gcm(KF2,gama_plain->message,gama_plain->message_length,gama_cipher->message,gama_cipher->message_length);
+
+                    printf("KF2 is\n");
+			        print_bytes(KF2,16);
+
+                    printf("here is the gama_cipher\n");
+                    print_bytes(gama_cipher->message,gama_cipher->message_length);
+                    
+                    
 
                     //calculate the gama_X_cipher
                     printf("here is the gama_X_plain \n");
@@ -929,8 +948,8 @@ void ecall_searchToken(unsigned char * token,int token_len){
                     gama_cipher->message,gama_cipher->message_length);
 
 
-                    printf("here is the vx\n");
-                    print_bytes(vx->message,vx->message_length);
+                    // printf("here is the vx\n");
+                    // print_bytes(vx->message,vx->message_length);
 
                     printf("\nsend vi %d to VxGamaX \n\n",vi);
 

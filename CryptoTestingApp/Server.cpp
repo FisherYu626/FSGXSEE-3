@@ -148,8 +148,10 @@ void Server:: ReceiveLVR(Lvalue * L,Vvalue * V,Gama * gamaPlain){
   //std::cout<<std::endl<<"Imm V is "<<v<<std::endl;
   IMM.insert(std::pair<std::string,std::vector<std::string>>(l,{v,gama}));
 
-  // std::cout<<std::endl<<"Imm V is "<<IMM[l][0]<<std::endl;
-  // std::cout<<std::endl<<"Imm gama is "<<IMM[l][1]<<std::endl;
+  //std::cout<<std::endl<<"Imm V is "<<IMM[l][0]<<std::endl;
+  //std::cout<<std::endl<<"Imm gama is "<<IMM[l][1].c_str()<<std::endl;
+  // printf("Imm Gama is \n");
+  // print_bytes((unsigned char *)IMM[l][1].c_str(),12);
 
   return;
 }

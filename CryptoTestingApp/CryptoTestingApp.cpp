@@ -297,10 +297,16 @@ int main()
 
 
 			RAND_bytes(gama_plain->message,3*sizeof(int)); //生成gama
-			
+
+			printf("here is the gama_plain\n");
+            print_bytes(gama_plain->message,12);
+
 			gama_cipher->message_length = enc_aes_gcm((unsigned char *)gama_plain->message,gama_plain->message_length,KF2value,(unsigned char *)gama_cipher->message); //G(KF2value,gama_plain)
 			
-			std::cout<<"gama_cipher->message_length is "<<gama_cipher->message_length<<std::endl;
+			printf("KF2 is\n");
+			print_bytes(KF2value,16);
+			
+			//std::cout<<"gama_cipher->message_length is "<<gama_cipher->message_length<<std::endl;
 			printf("generate gama_cipher success !\n");
 			print_bytes(gama_cipher->message,gama_cipher->message_length);
 			
@@ -337,7 +343,7 @@ int main()
 
 	/**************************Generate Token******************************************/
 
-	int v = 3;
+	int v = 1;
 	int cmp = 1;
 	int q = 0;
 	myClient->SetS(0);
@@ -348,10 +354,18 @@ int main()
 	ecall_searchToken(eid,t->message,t->message_length);
 	
 
+
+	// T *tt = myClient->Generate_Token(KF1value,v,cmp,q);
+
+	// ecall_searchToken(eid,tt->message,tt->message_length);
+
 	
 
 	free(t->message);
 	free(t);
+
+	// free(tt->message);
+	// free(tt);
 
 
 
