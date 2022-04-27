@@ -36,6 +36,7 @@ class Client{
                 const unsigned char * gamax_plain,int gamax_plain_len,
                 int vi);
         void DecryptR2Ids(unsigned char * R,int R_len);
+        void PrintIds();
 
     private:
         unsigned char KF[ENC_KEY_SIZE];

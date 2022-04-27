@@ -379,11 +379,46 @@ void Client::DecryptR2Ids(unsigned char * R,int R_len){
     unsigned char* V = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*sizeof(int));
 
     for(auto i : ViVxGamaX){
-        std::vector<int> res;
+        
         if(Qresult.count(i.first)){
+             memcpy(vx->message,i.second[0].c_str(),40);
+            vx->message_length = i.second[0].length();
+
+            memcpy(gama_X->message,(unsigned char *)i.second[1].c_str(),40);
+            gama_X->message_length  = i.second[1].length();
+
+            printf("here is the gama_X_pkain \n");
+            print_bytes(gama_X->message,gama_X->message_length);
+
+            printf("here is the KF2 \n");
+            print_bytes(KF2,40);
+
+            Gama_X_cipher->message_length = enc_aes_gcm(gama_X->message,gama_X->message_length,KF2,Gama_X_cipher->message);
+
+            printf("here is gama_X_Cipher in Decrpt ids\n");
+            print_bytes(Gama_X_cipher->message,40);
+
+            for(int i = 0;i<AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*sizeof(int);i++){
+                *(V+i) = *(vx->message+i)^*(Gama_X_cipher->message+i);
+            }
+
+            printf("here are ids\n");
+            print_bytes(V,40);
+
+            int id;
+
+            for(int j = 0; j<P;j++){
+                memcpy(&id,V+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+j*sizeof(int),4);
+                Qresult[i.first].push_back(id);
+                printf("id %d has been added into ids!!!\n",(int)id);
+            }
+
 
         }else{
             std::pair<int,std::vector<int>> temp;
+            std::vector<int> ids;
+
+            temp.first = i.first;
 
             memcpy(vx->message,i.second[0].c_str(),40);
             vx->message_length = i.second[0].length();
@@ -408,8 +443,23 @@ void Client::DecryptR2Ids(unsigned char * R,int R_len){
 
             printf("here are ids\n");
             print_bytes(V,40);
+
+            int id;
+
+            for(int j = 0; j<P;j++){
+                memcpy(&id,V+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+j*sizeof(int),4);
+                ids.push_back(id);
+                printf("id %d has been added into ids!!!\n",(int)id);
+            }
+
+            temp.second = ids;
+
+            Qresult.insert(temp);
+
         }
     }
+    
+    
 
     //解密所有的ids后释放ViVxGama 缓存
     while(!ViVxGamaX.empty()){
@@ -426,6 +476,23 @@ void Client::DecryptR2Ids(unsigned char * R,int R_len){
 
     free(Gama_X_cipher->message);
     free(Gama_X_cipher);
+
+    return;
+}
+
+void Client::PrintIds(){
+
+    for(auto i : Qresult){
+        printf("\n");
+        printf("the keyword vi is %d\n",i.first);
+        printf("Including the ids!!!\n");
+        for(auto j:i.second){
+            printf("%d ",j);
+        }
+        printf("\n");
+
+    }
+
 
     return;
 }

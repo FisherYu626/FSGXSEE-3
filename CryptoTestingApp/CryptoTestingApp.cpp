@@ -380,7 +380,6 @@ int main()
 	/**************************Build Process end **************************************/
 
 
-	/**************************Search Process******************************************/
 
 	/**************************Generate Token******************************************/
 
@@ -394,7 +393,7 @@ int main()
 
 	T *t = myClient->Generate_Token(KF1value,v,cmp,q);
 
-	
+	/**************************Search Process******************************************/
 	ecall_searchToken(eid,t->message,t->message_length);
 	
 	uint64_t end_add_time =  timeSinceEpochMillisec(); //插入操作结束时间
@@ -420,91 +419,11 @@ int main()
 	// free(tt->message);
 	// free(tt);
 
-
-
-
-
-	/**************************fisher altered!2.0 *********************************/
-
-	//Server	
-	// myServer= new Server();
-
-	// printf("Adding doc\n");
-
-	// /*** Update Protocol with op = add */
-	// for(int i=1;i <= total_file_no; i++){  //total_file_no
-	// 	//client read a document
-	// 	//printf("->%d",i);
-		
-	// 	docContent *fetch_data;
-	// 	fetch_data = (docContent *)malloc(sizeof( docContent));
-	// 	myClient->ReadNextDoc(fetch_data);
-
-	// 	//encrypt and send to Server
-	// 	entry *encrypted_entry;
-	// 	encrypted_entry = (entry*)malloc(sizeof(entry));
-		
-	// 	encrypted_entry->first.content_length = fetch_data->id.id_length; //add dociId
-	// 	encrypted_entry->first.content = (char*) malloc(fetch_data->id.id_length);
-	// 	encrypted_entry->second.message_length = fetch_data->content_length + AESGCM_MAC_SIZE + AESGCM_IV_SIZE;		
-	// 	encrypted_entry->second.message = (char *)malloc(encrypted_entry->second.message_length);
-
-
-	// 	myClient->EncryptDoc(fetch_data,encrypted_entry);
-		
-	// 	myServer->ReceiveEncDoc(encrypted_entry);
-		
-	// 	//upload (op,in) to Enclave
-
-	// 	ecall_addDoc(eid,fetch_data->id.doc_id,fetch_data->id.id_length,
-	// 					fetch_data->content,fetch_data->content_length);
-
-	// 	//free memory 
-	// 	free(fetch_data->content);
-	// 	free(fetch_data->id.doc_id);
-	// 	free(fetch_data);
-
-	// 	free(encrypted_entry->first.content);
-	// 	free(encrypted_entry->second.message);
-	// 	free(encrypted_entry);
-	// }
-
-
-	// //** Update Protocol with op = del (id)
-	// printf("\nDeleting doc\n");
+	/**************************cout the ids ******************************************/
+	myClient->PrintIds();
 	
-	// //docId* delV = new docId[del_no];
 
-	// //fisher put docId delV_i inside the for!!
-	// for(int del_index=1; del_index <=del_no; del_index++){
-	// 	docId delV_i;
-	// 	//printf("->%s",delV_i[del_index].doc_id);
-
-	// 	myClient->Del_GivenDocIndex(del_index, &delV_i);
-
-	// 	ecall_delDoc(eid,delV_i.doc_id,delV_i.id_length);
-	// }
-
-	// // //fisher altered!!
-	// // if(delV_i.doc_id != nullptr){
-	// // 	free(delV_i.doc_id);
-	// // }
-
-
-	// std::string s_keyword[2]= {"0,2000","4000,5000"};
-	// // std::string s_keyword[2]= {"0,2000","4800,5000"};  
-
-	// for (int s_i = 0; s_i < 2; s_i++){
-	// 	printf("\nSearching ==> %s\n", s_keyword[s_i].c_str());
-
-	// 	myServer->doc_ids.clear();
-	// 	std::cout << timeSinceEpochMillisec() << std::endl;
-
-	// 	ecall_search(eid, s_keyword[s_i].c_str(), s_keyword[s_i].size());
-
-	// 	std::cout << timeSinceEpochMillisec() << std::endl;
-	// }
-
+	
 	delete myClient;
 	delete myServer;
 
