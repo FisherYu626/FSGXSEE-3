@@ -55,5 +55,9 @@ enclave {
 
         void ocall_receive_R([in,size = R_len] unsigned char *R,int R_len);
 
+        void ocall_sendLVGAMA([in,size = L2_len]unsigned char * L2,int L2_len,
+        [in,size = V2_len]unsigned char *V2,int V2_len,
+        [in,size = gama_X2_len]unsigned char *gama_X2_plain,int gama_X2_len);
+
     };
 };

@@ -56,6 +56,10 @@ void SGX_UBRIDGE(SGX_NOCONVENTION, ocall_receive_VxGamaX, (unsigned char* vx_tex
 #define OCALL_RECEIVE_R_DEFINED__
 void SGX_UBRIDGE(SGX_NOCONVENTION, ocall_receive_R, (unsigned char* R, int R_len));
 #endif
+#ifndef OCALL_SENDLVGAMA_DEFINED__
+#define OCALL_SENDLVGAMA_DEFINED__
+void SGX_UBRIDGE(SGX_NOCONVENTION, ocall_sendLVGAMA, (unsigned char* L2, int L2_len, unsigned char* V2, int V2_len, unsigned char* gama_X2_plain, int gama_X2_len));
+#endif
 #ifndef SGX_OC_CPUIDEX_DEFINED__
 #define SGX_OC_CPUIDEX_DEFINED__
 void SGX_UBRIDGE(SGX_CDECL, sgx_oc_cpuidex, (int cpuinfo[4], int leaf, int subleaf));

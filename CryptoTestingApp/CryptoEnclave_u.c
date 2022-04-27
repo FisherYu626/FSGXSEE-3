@@ -105,6 +105,15 @@ typedef struct ms_ocall_receive_R_t {
 	int ms_R_len;
 } ms_ocall_receive_R_t;
 
+typedef struct ms_ocall_sendLVGAMA_t {
+	unsigned char* ms_L2;
+	int ms_L2_len;
+	unsigned char* ms_V2;
+	int ms_V2_len;
+	unsigned char* ms_gama_X2_plain;
+	int ms_gama_X2_len;
+} ms_ocall_sendLVGAMA_t;
+
 typedef struct ms_sgx_oc_cpuidex_t {
 	int* ms_cpuinfo;
 	int ms_leaf;
@@ -213,6 +222,14 @@ static sgx_status_t SGX_CDECL CryptoEnclave_ocall_receive_R(void* pms)
 	return SGX_SUCCESS;
 }
 
+static sgx_status_t SGX_CDECL CryptoEnclave_ocall_sendLVGAMA(void* pms)
+{
+	ms_ocall_sendLVGAMA_t* ms = SGX_CAST(ms_ocall_sendLVGAMA_t*, pms);
+	ocall_sendLVGAMA(ms->ms_L2, ms->ms_L2_len, ms->ms_V2, ms->ms_V2_len, ms->ms_gama_X2_plain, ms->ms_gama_X2_len);
+
+	return SGX_SUCCESS;
+}
+
 static sgx_status_t SGX_CDECL CryptoEnclave_sgx_oc_cpuidex(void* pms)
 {
 	ms_sgx_oc_cpuidex_t* ms = SGX_CAST(ms_sgx_oc_cpuidex_t*, pms);
@@ -255,9 +272,9 @@ static sgx_status_t SGX_CDECL CryptoEnclave_sgx_thread_set_multiple_untrusted_ev
 
 static const struct {
 	size_t nr_ocall;
-	void * table[15];
+	void * table[16];
 } ocall_table_CryptoEnclave = {
-	15,
+	16,
 	{
 		(void*)CryptoEnclave_ocall_print_string,
 		(void*)CryptoEnclave_ocall_transfer_encrypted_entries,
@@ -269,6 +286,7 @@ static const struct {
 		(void*)CryptoEnclave_ocall_retrieve_VGama,
 		(void*)CryptoEnclave_ocall_receive_VxGamaX,
 		(void*)CryptoEnclave_ocall_receive_R,
+		(void*)CryptoEnclave_ocall_sendLVGAMA,
 		(void*)CryptoEnclave_sgx_oc_cpuidex,
 		(void*)CryptoEnclave_sgx_thread_wait_untrusted_event_ocall,
 		(void*)CryptoEnclave_sgx_thread_set_untrusted_event_ocall,

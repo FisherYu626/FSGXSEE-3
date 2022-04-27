@@ -392,6 +392,33 @@ void Enclave_Generate_Vx(unsigned char * vx,unsigned char * gama_X_cipher,
     return;
  }
 
+
+void Enclave_Generate_Vx2(unsigned char * vx,unsigned char * gama_X_cipher,
+    unsigned char *V,unsigned char * gama_cipher){
+
+    printf("this is V retrived!!!\n");
+    print_bytes(V,40);
+    
+    //先跟后12个字节进行解xor
+    for(int i = 0;i<P*sizeof(int);i++){
+        // *(vx+i) = *(v+i)^*(gama_cipher+i)^*(gama_X_cipher+i);
+        *(vx+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+i) = *(V+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+i)^*(gama_cipher+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+i);
+    }
+
+    printf("here is v decrypt from xor \n");
+    print_bytes(vx,40);
+
+    //再重新用 gama_X_cipher 对 V后12个字节进行xor
+    for(int i = 0;i<P*sizeof(int);i++){
+        // *(vx+i) = *(v+i)^*(gama_cipher+i)^*(gama_X_cipher+i);
+        *(vx+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+i) = *(vx+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+i)^*(gama_X_cipher+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+i);
+    }
+
+
+
+    return;
+ }
+
 bool QincludesVi(std::vector<Qsgx *> & QsgxCache,int vi){
     
     for(int i = 0;i<QsgxCache.size();i++){

@@ -80,6 +80,29 @@ void TreeNode:: rangeSearchTree(TreeNode *root,int v,int cmp,int q,std::vector<T
     return;
 }
 
+TreeNode * TreeNode:: searchTree(TreeNode * N,int vi){
+    TreeNode *p;
+    N->BinarySearch(N,vi,p);
+    return p;
+}
+
+void TreeNode:: BinarySearch(TreeNode * N,int vi,TreeNode * &p){
+    if(!N){
+        printf("Search failed!!");
+        return;
+    }
+
+    if(vi == N->vct.first){
+        p = N;
+        return;
+    }else if(vi < N->vct.first){
+        BinarySearch(N->lchild,vi,p);
+    }else if(vi > N->vct.first){
+        BinarySearch(N->rchild,vi,p);
+    }
+
+    return;
+}
 TreeNode:: ~TreeNode(){
     //delete递归调用左侧和右侧节点上的析构函数。
     //delete不会删除指针。 它销毁(使用析构函数)指针指向的对象，然后释放它们使用的内存。

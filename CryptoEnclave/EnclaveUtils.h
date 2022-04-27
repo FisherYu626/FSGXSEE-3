@@ -37,7 +37,10 @@ void Enclave_Generate_L(Lvalue * L ,unsigned char * KF1Value,const int & vi,cons
 void Enclave_Generate_Vx(unsigned char * vx,unsigned char * gamax_cipher,
     unsigned char *v,unsigned char * gama_cipher,int gama_cipher_len );
 
+void Enclave_Generate_Vx2(unsigned char * vx,unsigned char * gamax_cipher,
+    unsigned char *v,unsigned char * gama_cipher);
 bool QincludesVi(std::vector<Qsgx *> & QsgxCache,int vi);
+
 
 
 /********************************************************/

@@ -159,6 +159,44 @@ void ocall_receive_R(unsigned char *R,int R_len){
 	return;
 }
 
+void ocall_sendLVGAMA(unsigned char * L2,int L2_len,
+unsigned char *V2,int V2_len,
+unsigned char *gama_X2_plain,int gama_X2_len){
+
+	Lvalue * L = (Lvalue *)malloc(sizeof(Lvalue));
+	Vvalue * V = (Vvalue *)malloc(sizeof(Vvalue));
+	Gama * gama_plain = (Gama *)malloc(sizeof(Gama));
+
+	gama_plain->message = (unsigned char *)malloc(P*sizeof(int));
+	gama_plain->message_length = P*sizeof(int);
+
+	L->ciphertext = (unsigned char *)malloc((AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4)*sizeof(unsigned char));
+	L->ciphertext_length = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4;
+
+	V->message = (unsigned char *)malloc((AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4)*sizeof(unsigned char));
+	V->message_length = (AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4)*sizeof(unsigned char);
+
+	memcpy(L->ciphertext,L2,L2_len);
+	L->ciphertext_length = L2_len;
+
+	memcpy(V->message,V2,V2_len);
+	V->message_length = V2_len;
+
+	memcpy(gama_plain->message,gama_X2_plain,gama_X2_len);
+	gama_plain->message_length = gama_X2_len;
+
+
+	myServer->ReceiveLVR(L,V,gama_plain);
+	
+	free(gama_plain->message);
+	free(gama_plain);
+	free(L->ciphertext);		
+	free(L);
+	free(V->message);
+	free(V);
+
+}
+
 
 //main func
 int main()
@@ -322,6 +360,9 @@ int main()
 			free(gama_plain);
 			free(L->ciphertext);		
 			free(L);
+			
+			free(V->message);
+			free(V);
 		}
 		//invoke SGX
 		VCT n; //(v,{c||t})
@@ -363,21 +404,21 @@ int main()
 
 
 
-	uint64_t start_add_time2 =  timeSinceEpochMillisec(); 
-	T *tt = myClient->Generate_Token(KF1value,v,cmp,q);
+	// uint64_t start_add_time2 =  timeSinceEpochMillisec(); 
+	// T *tt = myClient->Generate_Token(KF1value,v,cmp,q);
 
-	ecall_searchToken(eid,tt->message,tt->message_length);
+	// ecall_searchToken(eid,tt->message,tt->message_length);
 
-	uint64_t end_add_time2 =  timeSinceEpochMillisec(); //插入操作结束时间
-	std::cout << "********Time for second search********" << std::endl;
-	std::cout << "Total time:" << end_add_time2-start_add_time2 << " ms" << std::endl;
+	// uint64_t end_add_time2 =  timeSinceEpochMillisec(); //插入操作结束时间
+	// std::cout << "********Time for second search********" << std::endl;
+	// std::cout << "Total time:" << end_add_time2-start_add_time2 << " ms" << std::endl;
 	
 
 	free(t->message);
 	free(t);
 
-	free(tt->message);
-	free(tt);
+	// free(tt->message);
+	// free(tt);
 
 
 

@@ -690,7 +690,7 @@ void ecall_searchToken(unsigned char * token,int token_len){
     // for(int i = 0;i<40;i++){
     //     printf("%x",*(token+i));
     // } 
-     
+    
     s++;
     unsigned char * s_text = (unsigned char *)malloc(4*sizeof(int));
     int temp = 0;
@@ -749,6 +749,8 @@ void ecall_searchToken(unsigned char * token,int token_len){
     printf("cmp is %d\n",cmp);
     printf("q is %d\n",q);
 
+    int threshold  = 25;
+
     for(int i = 0;i<q;i++){
         CT_pair ct = treeNodes[i]->vct.second;
 
@@ -787,7 +789,6 @@ void ecall_searchToken(unsigned char * token,int token_len){
 
 
             for(int i = 0;i<QsgxCache.size();i++){
-                //严重问题！！
 
                 if(QsgxCache[i]->vi == vi){
                     printf("Gama len is %d\n",QsgxCache[i]->LVG.second[1].size());
@@ -859,6 +860,8 @@ void ecall_searchToken(unsigned char * token,int token_len){
             while(c<ci){
                 printf("now the vi is %d\n",vi);
                 printf("now the c is %d\n",c);
+
+
                 Enclave_Generate_L(L,KF1,vi,c,ti);
                 
                 ocall_retrieve_VGama(L->ciphertext,L->ciphertext_length,
@@ -964,6 +967,152 @@ void ecall_searchToken(unsigned char * token,int token_len){
                 }
             }
             
+            //Rebuild the Qsgx
+            if(QsgxCache.size()> threshold){
+                printf("\n\n---------------------Rebuild Part Started!!------------------------------\n");
+
+
+                
+                int last = -1;
+                int c;
+                int vi,ci,ti;
+                TreeNode * p;
+
+                Lvalue *L2 = (Lvalue *)malloc(sizeof(Lvalue));
+                Vvalue *V2 = (Vvalue *)malloc(sizeof(Vvalue));
+
+                L2->ciphertext = (unsigned char *)malloc((AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+3*sizeof(int))*sizeof(unsigned char));
+                L2->ciphertext_length = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+3*sizeof(int);
+
+                V2->message = (unsigned char *)malloc((AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4)*sizeof(unsigned char));
+                V2->message_length = (AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4)*sizeof(unsigned char);
+
+                Gama * gama_X2_cipher = (Gama *)malloc(sizeof(Gama));
+                gama_X2_cipher->message = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +P*sizeof(int));
+                gama_X2_cipher->message_length = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +P*sizeof(int);
+
+                for(auto i :QsgxCache){
+                    
+                    
+                    if(i->vi != last){
+                        //get vi from qsgx
+                        vi = i->vi;
+                        p = N->searchTree(N,vi);
+                        if(!p){
+                            printf("Search Error!!\n");
+                        }
+                        printf("Search Success!!\n");
+
+                        //get ci ti from N[vi]
+                        ci = p->vct.second[0];
+                        ti = p->vct.second[1];
+
+                        printf("ci is %d\n",ci);
+                        printf("ti is %d\n",ti);
+
+
+                        //set c = 0
+                        c = 0;
+
+                        //add ti ++
+                        ti++;
+                        //save the ti in Node[vi]
+                        p->vct.second[1]++;
+
+                        printf("ti++ is %d\n",ti);
+
+                        //calculate the new L2
+                        Enclave_Generate_L(L2,KF1,vi,c,ti);
+                        
+                        //generate gamax2
+                        unsigned char gama_X2_plain[P*sizeof(int)];
+                        sgx_read_rand(gama_X2_plain, P*sizeof(int));
+
+                        //calculate the G(K2,gama')
+                        enc_aes_gcm(KF2,gama_X2_plain,P*sizeof(int),gama_X2_cipher->message,gama_X2_cipher->message_length);
+
+                        //get the gama from qsgx
+                        memcpy(gama_plain->message,(unsigned char *)i->LVG.second[1].c_str(),gama_plain->message_length);
+
+                        //get the V from qsgx
+                        memcpy(V->message,(unsigned char *)i->LVG.second[0].c_str(),V->message_length);
+
+                        //calculate the G(k2,gama)
+                        enc_aes_gcm(KF2,gama_plain->message,gama_plain->message_length,gama_cipher->message,gama_cipher->message_length);
+
+                        //calculate the new Vx2
+                        Enclave_Generate_Vx2(V2->message,gama_X2_cipher->message,
+                        V->message,
+                        gama_cipher->message);
+                        
+                        //save L2V2GamaX2 to IMM
+                        ocall_sendLVGAMA(L2->ciphertext,L2->ciphertext_length,
+                        V2->message,V2->message_length,
+                        gama_X2_plain,P*sizeof(int));
+
+                        last = i->vi;
+
+                        
+                    }else{
+
+                        c++;
+
+                        //calculate the new L2
+                        Enclave_Generate_L(L2,KF1,vi,c,ti);
+
+                        //generate gamax2
+                        unsigned char gama_X2_plain[P*sizeof(int)];
+                        sgx_read_rand(gama_X2_plain, P*sizeof(int));
+
+                        //calculate the G(K2,gama')
+                        enc_aes_gcm(KF2,gama_X2_plain,P*sizeof(int),gama_X2_cipher->message,gama_X2_cipher->message_length);
+
+                        //get the gama from qsgx
+                        memcpy(gama_plain->message,(unsigned char *)i->LVG.second[1].c_str(),gama_plain->message_length);
+
+                        //get the V from qsgx
+                        memcpy(V->message,(unsigned char *)i->LVG.second[0].c_str(),V->message_length);
+
+                        //calculate the G(k2,gama)
+                        enc_aes_gcm(KF2,gama_plain->message,gama_plain->message_length,gama_cipher->message,gama_cipher->message_length);
+
+                        //calculate the new Vx2
+                        Enclave_Generate_Vx2(V2->message,gama_X2_cipher->message,
+                        V->message,
+                        gama_cipher->message);
+                        
+                        //save L2V2GamaX2 to IMM
+                        ocall_sendLVGAMA(L2->ciphertext,L2->ciphertext_length,
+                        V2->message,V2->message_length,
+                        gama_X2_plain,P*sizeof(int));
+
+                    }
+
+
+                }
+
+
+                //cleanup the QsgxCache
+                for(int i = QsgxCache.size()-1;i>=0;i--){
+                    Qsgx * temp = QsgxCache[i];
+                    delete temp;
+                    QsgxCache.pop_back();
+                }
+
+                free(gama_X2_cipher->message);
+                free(gama_X2_cipher);
+
+                free(L2->ciphertext);
+                free(L2);
+
+                free(V2->message);
+                free(V2);
+
+                printf("\n\n---------------------Rebuild Part Ended!!------------------------------\n");
+                printf("\n\n");
+            }
+
+
 
             free(gama_X_cipher->message);
             free(gama_X_cipher);
