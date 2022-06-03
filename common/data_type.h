@@ -12,13 +12,11 @@
 #include <set>
 #include <utility>
 #include <unordered_map>
-
-//fisher added!
 #include<map>
 /* for all sources except OCALL/ECALL */
 
 //const std::string raw_doc_dir= "streaming/"; 
-const std::string raw_doc_dir= "streaming/"; 
+const std::string raw_doc_dir= "streaming10/"; 
 
 #define AESGCM_IV_SIZE 12
 static unsigned char gcm_iv[] = {

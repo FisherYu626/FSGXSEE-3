@@ -25,7 +25,3 @@ int del_no = (int) 20000;//10000;
   `
     $ ./cryptoTestingApp
   `
-
-## Worklog after Fork:
-Mon 4 Mar, 19
-- This version is only tested on Ubuntu 16.04/18.04 with SGX >=2.0

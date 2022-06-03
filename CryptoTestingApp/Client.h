@@ -18,6 +18,9 @@ class Client{
         Client();
 
         void ReadNextDoc(docContent *fetch_data);
+        //fisher added
+        //std::vector<std::string> Client::EncSlice(docContent *content,unsigned char * KFvalue);
+
         void Del_GivenDocIndex(const int del_index, docId* delV_i);
         void Del_GivenDocArray(const int * del_arr, docId* delV, int n);
         void getKFValue(unsigned char * outKey);
@@ -30,7 +33,11 @@ class Client{
         bool AddS();
         bool SetS(int num);
 
-        void EncryptDoc(const docContent *data, entry *encrypted_doc );
+        //void EncryptDoc(const docContent *data, entry *encrypted_doc );
+        //fisher overload
+        void EncryptDoc(const docContent* data, docContent *encrypted_doc );
+        void DecryptDoc(docContent* encrypted_doc, docContent *data);
+
         void DecryptDocCollection(std::vector<std::string> Res);
         void receive_vxGamaX(const unsigned char * vx_text,int vx_length,
                 const unsigned char * gamax_plain,int gamax_plain_len,

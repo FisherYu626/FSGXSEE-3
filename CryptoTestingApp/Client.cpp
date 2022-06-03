@@ -52,11 +52,11 @@ void Client::ReadNextDoc(docContent *content){
     std::cout<<"<"<<content->id.doc_id<<">"<<std::endl;
 
     //read the file content raw_doc_dir "/streaming"
-    inFile.open( raw_doc_dir + fileName); 
+    inFile.open( raw_doc_dir + fileName+".txt"); 
     strStream << inFile.rdbuf();
     inFile.close();
 
-    /** convert document content to char* and record length */
+
     std::string str = strStream.str();
     int plaintext_len;
     plaintext_len = str.length()+1;
@@ -67,13 +67,33 @@ void Client::ReadNextDoc(docContent *content){
     memcpy(content->content, str.c_str(),plaintext_len);
     // std::cout<<str.c_str()<<std::endl;
     content->content_length = plaintext_len;
-    std::cout<<"here is the ids"<<std::endl;
+    //std::cout<<"here is the ids"<<std::endl;
     //查看读取文档的内容ids
-    std::cout<<str.c_str()<<std::endl;
+    //std::cout<<str.c_str()<<std::endl;
 
     strStream.clear();
 
 }
+
+// std::vector<std::string> Client::EncSlice(docContent *content,unsigned char * KFvalue){
+//     //encrptying doc
+//     docContent * EncDoc;
+//     EncDoc->id = content->id;
+    
+//     EncDoc->content_length = enc_aes_gcm((unsigned char *)content->content,content->content_length,KFvalue,(unsigned char *)EncDoc->content);
+
+//     //verify encryption
+
+//     dec_aes_gcm()
+
+    
+
+
+
+
+
+
+// }
 
 void Client::Del_GivenDocIndex(const int del_index, docId* delV_i){
     
@@ -100,12 +120,26 @@ void Client::Del_GivenDocArray(const int * del_arr, docId* delV, int n){
     }
 }
 
-void Client::EncryptDoc(const docContent* data, entry *encrypted_doc ){
+// void Client::EncryptDoc(const docContent* data, entry *encrypted_doc ){
 
-    memcpy(encrypted_doc->first.content,data->id.doc_id,data->id.id_length);
-	encrypted_doc->second.message_length = enc_aes_gcm((unsigned char*)data->content,
-                                                        data->content_length,KF,
-                                                        (unsigned char*)encrypted_doc->second.message);
+//     memcpy(encrypted_doc->first.content,data->id.doc_id,data->id.id_length);
+// 	encrypted_doc->second.message_length = enc_aes_gcm((unsigned char*)data->content,
+//                                                         data->content_length,KF,
+//                                                         (unsigned char*)encrypted_doc->second.message);
+// }
+
+void Client::EncryptDoc(const docContent* data, docContent *encrypted_doc ){
+
+    encrypted_doc->content_length =  enc_aes_gcm((unsigned char *)data->content,data->content_length,KF1,(unsigned char *)encrypted_doc->content);
+    //std::cout<<"the len of enc doc is "<<encrypted_doc->content_length<<std::endl;
+    return;
+}
+
+void Client::DecryptDoc(docContent* encrypted_doc, docContent *data){
+
+    data->content_length = dec_aes_gcm((unsigned char *)encrypted_doc->content,encrypted_doc->content_length,KF1,(unsigned char *)data->content);
+    //std::cout<<"the len of enc doc is "<<encrypted_doc->content_length<<std::endl;
+    return;
 }
 
 
@@ -381,7 +415,8 @@ void Client::DecryptR2Ids(unsigned char * R,int R_len){
     for(auto i : ViVxGamaX){
         
         if(Qresult.count(i.first)){
-             memcpy(vx->message,i.second[0].c_str(),40);
+            
+            memcpy(vx->message,i.second[0].c_str(),40);
             vx->message_length = i.second[0].length();
 
             memcpy(gama_X->message,(unsigned char *)i.second[1].c_str(),40);

@@ -46,11 +46,10 @@ else
 endif
 
 App_Cpp_Files := $(wildcard CryptoTestingApp/*.cpp)
-App_Include_Paths := -IInclude -IApp -I$(SGX_SDK)/include -I/usr/include -I/usr/include/openssl
+App_Include_Paths := -IInclude -IApp -I$(SGX_SDK)/include -I/usr/include -I/usr/include/openssl -I/usr/local/include
 
 App_C_Flags := $(SGX_COMMON_CFLAGS) -fPIC -Wno-attributes $(App_Include_Paths)
 
-#fisher added
 App_C_Flags +=-g
 # Three configuration modes - Debug, prerelease, release
 #   Debug - Macro DEBUG enabled.
@@ -65,7 +64,7 @@ else
 endif
 
 App_Cpp_Flags := $(App_C_Flags) -std=c++11
-App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_LIBRARY_PATH) -l$(Urts_Library_Name) -lpthread -lpcap -L$(SGXSSL_LIB_PATH) -lsgx_usgxssl -lssl -lcrypto
+App_Link_Flags := $(SGX_COMMON_CFLAGS) -L$(SGX_LIBRARY_PATH) -l$(Urts_Library_Name) -lpthread -lpcap -L$(SGXSSL_LIB_PATH) -lsgx_usgxssl -lssl -lcrypto -lsnappy
 
 ifneq ($(SGX_MODE), HW)
 	App_Link_Flags += -lsgx_uae_service_sim

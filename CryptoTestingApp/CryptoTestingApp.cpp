@@ -3,6 +3,8 @@
 #include "stdio.h"
 #include "stdlib.h"
 
+#include <snappy.h>
+
 #include "sgx_urts.h"
 #include "CryptoEnclave_u.h"
 
@@ -17,10 +19,13 @@
 #include<unordered_map>
 #include <openssl/rand.h>
 #include<math.h>
+
+
 //for measurement
 #include <cstdint>
 #include <chrono>
 #include <iostream>
+
 uint64_t timeSinceEpochMillisec() {
   using namespace std::chrono;
   return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
@@ -227,200 +232,67 @@ int main()
 	//fisher altered!
 	ecall_init(eid,KF1value,KF2value,(size_t)ENC_KEY_SIZE);
 
-	//ecall_printHelloWorld(eid);
 
-
-	/**************************fisher altered!2.0 *********************************/
 	/**************************Build Process **************************************/
 	myServer= new Server();
 
 	printf("Adding doc\n");
 
 	/*** Saving the V to DB(v)*************************************/
-	for(int i=1;i <= total_file_no; i++){  
+	// for(int i=1;i <= total_file_no; i++){  
 		
 		docContent *fetch_data;
-		std::vector<std::string> res;
-
+		docContent *Enc_data;
+		std::string CompressData;
+		// std::vector<std::string> res;
 
 		fetch_data = (docContent *)malloc(sizeof( docContent));
+		Enc_data = (docContent *)malloc(sizeof(docContent));
 		myClient->ReadNextDoc(fetch_data);
 
-		res = split(fetch_data->content,',');
+		printf("*******************Encrypting *****************\n");
+		std::cout<<fetch_data->content<<std::endl;
 
-        for(auto i:res){
-			int inum  = std::stoi(i);
-            DB[inum].push_back(std::stoi(fetch_data->id.doc_id));
-        }
+		
+		Enc_data->id.id_length = fetch_data->id.id_length;
+		Enc_data->id.doc_id = (char *)malloc(Enc_data->id.id_length);
+		memcpy(Enc_data->id.doc_id,fetch_data->id.doc_id,fetch_data->id.id_length);
+		
+		Enc_data->content_length = fetch_data->content_length + AESGCM_MAC_SIZE + AESGCM_IV_SIZE;	
+		Enc_data->content = (char *)malloc(Enc_data->content_length);
+
+		myClient->EncryptDoc(fetch_data,Enc_data);
+		
+		// Verifying doc Enc
+
+		// myClient->DecryptDoc(Enc_data,fetch_data);
+		// std::cout<<fetch_data->content<<std::endl;
+		// printf("*******************Verify Encrypting ******************\n");
+
+
+		snappy::Compress(Enc_data->content,(unsigned long)Enc_data->content_length,&CompressData);
+		
+		// //Verifying Compress
+		
+		// std::string UncompressData;
+		// snappy::Uncompress(CompressData.data(),(unsigned long)CompressData.size(),&UncompressData);
+
+		// if(!strcmp(Enc_data->content,UncompressData.data())){
+		// 	// std::cout<<CompressData<<std::endl;
+		// 	std::cout<<"Compress Success!!!"<<std::endl;
+		// }
 
 		free(fetch_data->content);
 		free(fetch_data->id.doc_id);
 		free(fetch_data);
 
-	}
+		free(Enc_data->content);
+		free(Enc_data->id.doc_id);
+		free(Enc_data);
 
-	for(auto i:DB){
-		printf("the content in Db is %d\n",i.first);
-	}
-	// cout the DB
-	// for (auto & i : DB) {
-	// 	printf("the keyword %d includes ",i.first);
-    //     for (auto j = i.second.begin(); j != i.second.end(); j++) {
-    //         printf("%d ",*j);
-    //     }
-	// 	printf("\n");
-    // }
+	// }
+
 	
-	//divide DB into p blocks
-
-	for(auto & DBv : DB){
-		std:: vector<Block> Blocks; //关键字对应块(v,V)
-		int vword = DBv.first; //关键字v
-
-		printf("now divide the block of v %d\n",vword);
-		std::cout<<"DBV size "<<DBv.second.size()<<std::endl;
-		int BlockNums = ceil(DBv.second.size()*1.0/P); //块个数 beta
-		std::cout<<"DBvNums size "<<BlockNums<<std::endl;
-		std::vector<int> DBvItems = DBv.second; //V={id1,id2,...,idp}
-
-
-		for(int i = 0;i<BlockNums;i++){
-			Block temp;
-			int j = 0;
-			for(;j< P && (i*P+j)<DBvItems.size() ;j++){
-				temp[j] = DBvItems[i*P+j];
-			}
-			while(j<P){
-				temp[j] = -1;
-				j++;
-			}
-			Blocks.push_back(temp);
-		}
-
-		int t = 0;
-		for(auto i : Blocks){
-			std::cout<<"the block "<<t<<"th num1 is "<< i[0]<<std::endl;
-			std::cout<<"the block "<<t<<"th num2 is "<< i[1]<<std::endl;
-			std::cout<<"the block "<<t<<"th num3 is "<< i[2]<<std::endl;
-			// std::cout<<"the block "<<t<<"th num4 is "<< i[3]<<std::endl;
-			t++;
-		}
-
-		CT_pair CT; //(c||t)
-		CT[0] = 0;
-		CT[1] = 0;
-		
-
-		for(auto block : Blocks){
-			Lvalue * L = (Lvalue *)malloc(sizeof(Lvalue));
-			Vvalue * V = (Vvalue *)malloc(sizeof(Vvalue));
-			Gama * gama_plain = (Gama *)malloc(sizeof(Gama));
-			Gama * gama_cipher = (Gama *)malloc(sizeof(Gama));
-
-			
-			gama_plain->message = (unsigned char *)malloc(P*sizeof(int));
-			gama_plain->message_length = P*sizeof(int);
-
-			gama_cipher->message = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +P*sizeof(int) );
-			gama_cipher->message_length = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE +P*sizeof(int);
-			
-			L->ciphertext = (unsigned char *)malloc((AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4)*sizeof(unsigned char));
-			L->ciphertext_length = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4;
-
-			V->message = (unsigned char *)malloc((AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4)*sizeof(unsigned char));
-			V->message_length = (AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+P*4)*sizeof(unsigned char);
-			
-			
-			myClient->G_AesEncrypt(L,KF1value,vword,CT);//L <-- G(KF1value,vword||CT)
-
-
-			RAND_bytes(gama_plain->message,3*sizeof(int)); //生成gama
-
-			printf("here is the gama_plain\n");
-            print_bytes(gama_plain->message,12);
-
-			gama_cipher->message_length = enc_aes_gcm((unsigned char *)gama_plain->message,gama_plain->message_length,KF2value,(unsigned char *)gama_cipher->message); //G(KF2value,gama_plain)
-			
-			printf("KF2 is\n");
-			print_bytes(KF2value,16);
-			
-			//std::cout<<"gama_cipher->message_length is "<<gama_cipher->message_length<<std::endl;
-			printf("generate gama_cipher success !\n");
-			print_bytes(gama_cipher->message,gama_cipher->message_length);
-			
-			myClient->Generate_V(V,block,gama_cipher);//V <-- {id1,id2,...,idp} \xor gama_cipher
-			//c++
-			CT[0]++;
-
-			myServer->ReceiveLVR(L,V,gama_plain); //store {L,V,gama} to Imm
-
-			free(gama_cipher->message);
-			free(gama_cipher);
-			free(gama_plain->message);
-			free(gama_plain);
-			free(L->ciphertext);		
-			free(L);
-			
-			free(V->message);
-			free(V);
-		}
-		//invoke SGX
-		VCT n; //(v,{c||t})
-		n.first = vword;
-		n.second = CT;
-
-		printf("before insert into N!!!\n");
-		printf("v is %d \n",n.first);
-		printf("c is %d\n",n.second[0]);
-		ecall_InsertVct(eid,n.first,n.second[0],n.second[1]);
-
-	}
-
-
-	/**************************Build Process end **************************************/
-
-
-
-	/**************************Generate Token******************************************/
-
-	int v = 3;
-	int cmp = 1;
-	int q = 0;
-	myClient->SetS(0);
-
-	//cmp 1是 <= 0是>=
-	uint64_t start_add_time =  timeSinceEpochMillisec(); 
-
-	T *t = myClient->Generate_Token(KF1value,v,cmp,q);
-
-	/**************************Search Process******************************************/
-	ecall_searchToken(eid,t->message,t->message_length);
-	
-	uint64_t end_add_time =  timeSinceEpochMillisec(); //插入操作结束时间
-	std::cout << "********Time for first search********" << std::endl;
-	std::cout << "Total time:" << end_add_time-start_add_time << " ms" << std::endl;
-	
-
-
-
-	// uint64_t start_add_time2 =  timeSinceEpochMillisec(); 
-	// T *tt = myClient->Generate_Token(KF1value,v,cmp,q);
-
-	// ecall_searchToken(eid,tt->message,tt->message_length);
-
-	// uint64_t end_add_time2 =  timeSinceEpochMillisec(); //插入操作结束时间
-	// std::cout << "********Time for second search********" << std::endl;
-	// std::cout << "Total time:" << end_add_time2-start_add_time2 << " ms" << std::endl;
-	
-
-	free(t->message);
-	free(t);
-
-	// free(tt->message);
-	// free(tt);
-
-	/**************************cout the ids ******************************************/
-	myClient->PrintIds();
 	
 
 	

@@ -1,8 +1,7 @@
 #include "Utils.h"
-
-
+#include <sstream>
 #include <vector>
-
+#include <fstream>
  
 using std::string;
 using std::vector;
@@ -107,4 +106,95 @@ std::vector<std::string> split(std::string s, char c)
         else t += s[i];
     }
     return ret;
+}
+
+std::string readNextDoc(int file_reading_counter){
+    std::string rawDocDir = "/home/node10/compress/dataset/100000/";
+    std::ifstream inFile;
+    std::stringstream strStream;
+
+    string filename = std::to_string(file_reading_counter);
+
+    filename = rawDocDir +filename+".txt";
+
+    //cout<<"filename is "<<filename<<endl;
+
+    inFile.open(filename);
+    strStream << inFile.rdbuf();
+    inFile.close();
+
+    string res = strStream.str();
+    //cout<<"now the doc"<<filename<<endl;
+    //cout<<res<<endl;
+    
+    strStream.clear();
+
+    return res;
+}
+
+std::string readNextBinaries(int file_reading_counter){
+    std::string rawDocDir = "/home/node10/compress/snaTmp/dataset/100000/a";
+
+    std::ifstream inFile;
+    std::stringstream strStream;
+
+    string filename = std::to_string(file_reading_counter);
+
+    filename = rawDocDir +filename+".txt";
+
+    //cout<<"filename is "<<filename<<endl;
+
+    inFile.open(filename);
+    strStream << inFile.rdbuf();
+    inFile.close();
+
+    string res = strStream.str();
+    //cout<<"now the doc"<<filename<<endl;
+    //cout<<res<<endl;
+    
+    strStream.clear();
+
+    return res;
+}
+
+bool WriteNextDoc(int file_reading_counter,string output){
+    bool isOk;
+    std::ofstream outFile;
+    std::stringstream strStream(output);
+
+    string outDocDir = "/home/node10/compress/snaTmp/dataset/100000/";
+
+    string outDocfile = outDocDir+std::to_string(file_reading_counter)+".txt";
+
+    outFile.open(outDocfile,std::ofstream::out);
+    //C++流对象函数rdbuf()简介:
+    //rdbuf()可以实现一个流对象指向的内容用另一个流对象来输出
+    outFile<<strStream.rdbuf();
+    outFile.close();
+
+    strStream.clear();
+    isOk = true;
+
+    return isOk;
+}
+
+bool WriteNextBinaries(int file_reading_counter,string output){
+    bool isOk;
+    std::ofstream outFile;
+    std::stringstream strStream(output);
+
+    string outDocDir = "/home/node10/compress/snaTmp/dataset/100000/";
+
+    string outDocfile = outDocDir+"a"+std::to_string(file_reading_counter)+".txt";
+
+    outFile.open(outDocfile,std::ofstream::out);
+    //C++流对象函数rdbuf()简介:
+    //rdbuf()可以实现一个流对象指向的内容用另一个流对象来输出
+    outFile<<strStream.rdbuf();
+    outFile.close();
+
+    strStream.clear();
+    isOk = true;
+
+    return isOk;
 }
