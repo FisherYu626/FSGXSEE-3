@@ -61,6 +61,17 @@ typedef struct ms_ecall_searchToken_t {
 	int ms_token_len;
 } ms_ecall_searchToken_t;
 
+typedef struct ms_ecall_verifyIDEnc_t {
+	unsigned char* ms_ID;
+	size_t ms_len;
+} ms_ecall_verifyIDEnc_t;
+
+typedef struct ms_ecall_SendOpIdN_t {
+	int ms_op;
+	unsigned char* ms_IdN;
+	int ms_len;
+} ms_ecall_SendOpIdN_t;
+
 typedef struct ms_ocall_print_string_t {
 	const char* ms_str;
 } ms_ocall_print_string_t;
@@ -476,11 +487,105 @@ err:
 	return status;
 }
 
+static sgx_status_t SGX_CDECL sgx_ecall_verifyIDEnc(void* pms)
+{
+	CHECK_REF_POINTER(pms, sizeof(ms_ecall_verifyIDEnc_t));
+	//
+	// fence after pointer checks
+	//
+	sgx_lfence();
+	ms_ecall_verifyIDEnc_t* ms = SGX_CAST(ms_ecall_verifyIDEnc_t*, pms);
+	sgx_status_t status = SGX_SUCCESS;
+	unsigned char* _tmp_ID = ms->ms_ID;
+	size_t _tmp_len = ms->ms_len;
+	size_t _len_ID = _tmp_len;
+	unsigned char* _in_ID = NULL;
+
+	CHECK_UNIQUE_POINTER(_tmp_ID, _len_ID);
+
+	//
+	// fence after pointer checks
+	//
+	sgx_lfence();
+
+	if (_tmp_ID != NULL && _len_ID != 0) {
+		if ( _len_ID % sizeof(*_tmp_ID) != 0)
+		{
+			status = SGX_ERROR_INVALID_PARAMETER;
+			goto err;
+		}
+		_in_ID = (unsigned char*)malloc(_len_ID);
+		if (_in_ID == NULL) {
+			status = SGX_ERROR_OUT_OF_MEMORY;
+			goto err;
+		}
+
+		if (memcpy_s(_in_ID, _len_ID, _tmp_ID, _len_ID)) {
+			status = SGX_ERROR_UNEXPECTED;
+			goto err;
+		}
+
+	}
+
+	ecall_verifyIDEnc(_in_ID, _tmp_len);
+
+err:
+	if (_in_ID) free(_in_ID);
+	return status;
+}
+
+static sgx_status_t SGX_CDECL sgx_ecall_SendOpIdN(void* pms)
+{
+	CHECK_REF_POINTER(pms, sizeof(ms_ecall_SendOpIdN_t));
+	//
+	// fence after pointer checks
+	//
+	sgx_lfence();
+	ms_ecall_SendOpIdN_t* ms = SGX_CAST(ms_ecall_SendOpIdN_t*, pms);
+	sgx_status_t status = SGX_SUCCESS;
+	unsigned char* _tmp_IdN = ms->ms_IdN;
+	int _tmp_len = ms->ms_len;
+	size_t _len_IdN = _tmp_len;
+	unsigned char* _in_IdN = NULL;
+
+	CHECK_UNIQUE_POINTER(_tmp_IdN, _len_IdN);
+
+	//
+	// fence after pointer checks
+	//
+	sgx_lfence();
+
+	if (_tmp_IdN != NULL && _len_IdN != 0) {
+		if ( _len_IdN % sizeof(*_tmp_IdN) != 0)
+		{
+			status = SGX_ERROR_INVALID_PARAMETER;
+			goto err;
+		}
+		_in_IdN = (unsigned char*)malloc(_len_IdN);
+		if (_in_IdN == NULL) {
+			status = SGX_ERROR_OUT_OF_MEMORY;
+			goto err;
+		}
+
+		if (memcpy_s(_in_IdN, _len_IdN, _tmp_IdN, _len_IdN)) {
+			status = SGX_ERROR_UNEXPECTED;
+			goto err;
+		}
+
+	}
+
+	ecall_SendOpIdN(ms->ms_op, _in_IdN, _tmp_len);
+
+err:
+	if (_in_IdN) free(_in_IdN);
+	return status;
+}
+
 SGX_EXTERNC const struct {
 	size_t nr_ecall;
-	struct {void* ecall_addr; uint8_t is_priv; uint8_t is_switchless;} ecall_table[7];
+	struct {void* ecall_addr; uint8_t is_priv; uint8_t is_switchless;} ecall_table[9];
 } g_ecall_table = {
-	7,
+	9,
 	{
 		{(void*)(uintptr_t)sgx_ecall_init, 0, 0},
 		{(void*)(uintptr_t)sgx_ecall_addDoc, 0, 0},
@@ -489,31 +594,33 @@ SGX_EXTERNC const struct {
 		{(void*)(uintptr_t)sgx_ecall_printHelloWorld, 0, 0},
 		{(void*)(uintptr_t)sgx_ecall_InsertVct, 0, 0},
 		{(void*)(uintptr_t)sgx_ecall_searchToken, 0, 0},
+		{(void*)(uintptr_t)sgx_ecall_verifyIDEnc, 0, 0},
+		{(void*)(uintptr_t)sgx_ecall_SendOpIdN, 0, 0},
 	}
 };
 
 SGX_EXTERNC const struct {
 	size_t nr_ocall;
-	uint8_t entry_table[16][7];
+	uint8_t entry_table[16][9];
 } g_dyn_entry_table = {
 	16,
 	{
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, },
 	}
 };
 

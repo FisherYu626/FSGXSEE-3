@@ -15,6 +15,9 @@ enclave {
         public void ecall_printHelloWorld();
         public void ecall_InsertVct(int vword,int c,int t);
         public void ecall_searchToken([in,size = token_len]unsigned char * token,int token_len);
+        public void ecall_verifyIDEnc([in, size=len]unsigned char *ID,size_t len);
+
+        public void ecall_SendOpIdN(int op,[in,size = len]unsigned char * IdN,int len);
     };
 
     untrusted {
@@ -58,6 +61,9 @@ enclave {
         void ocall_sendLVGAMA([in,size = L2_len]unsigned char * L2,int L2_len,
         [in,size = V2_len]unsigned char *V2,int V2_len,
         [in,size = gama_X2_len]unsigned char *gama_X2_plain,int gama_X2_len);
+
+
+        void ocall_receive_PKi([in,size=addr_len] unsigned char *Addr,int addr_len,[out,size = Pki_len]unsigned char * PKi,int PKi_len);
 
     };
 };

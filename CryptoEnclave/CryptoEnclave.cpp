@@ -1170,3 +1170,74 @@ void ecall_searchToken(unsigned char * token,int token_len){
 
     return;
 }
+
+void ecall_verifyIDEnc(unsigned char *ID,size_t len){
+    unsigned char * addr = (unsigned char *)malloc(8+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE);
+    int addrlen = 8+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE;
+
+    enc_aes_gcm(KF1,ID,len,addr,addrlen);
+
+    print_bytes(addr,addrlen);
+    
+    free(addr);
+    
+    return;
+}
+
+void ecall_SendOpIdN(int op,unsigned char * IdN,int len){
+    //opid : 0 = add, 1 = del
+
+    if(op == 0){
+        int id,N;
+        memcpy(&id,IdN,4);
+        memcpy(&N,IdN+4,4);
+        //printf("%d,%d\n",id,N);
+
+        std::vector<std::string> doc;
+        unsigned char * ID = (unsigned char *)malloc(8);
+        unsigned char * addr = (unsigned char *)malloc(8+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE);
+        unsigned char * pki = (unsigned char *)malloc(COMSLICE_LEN);
+        for(int i = 0;i<N;i++){
+            memcpy(ID,&id,4);
+            memcpy(ID+4,&i,4);
+            enc_aes_gcm(KF1,ID,2*sizeof(int),addr,8+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE);
+
+
+            // print_bytes(addr,8+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE);
+			// printf("\n");
+            std::string Addr;
+            for(int k = 0;k<AESGCM_MAC_SIZE;k++){
+                Addr.push_back(addr[k]);
+            }
+
+
+
+
+
+            ocall_receive_Pki((unsigned char *) Addr.c_str(),AESGCM_MAC_SIZE,pki,COMSLICE_LEN);
+            
+            std::string PKi(pki);
+            doc.push_back(PKi);
+        
+        }
+ 
+
+
+        free(ID);
+        free(addr);
+        free(pki);
+
+
+
+
+
+    }else if(op == 1){
+
+
+    }
+
+
+
+
+    return;
+}

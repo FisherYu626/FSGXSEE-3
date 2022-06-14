@@ -34,6 +34,8 @@ class Server{
 								rand_t *Q_w_u_arr,rand_t *Q_w_id_arr,
 								int pair_count);
 
+        void ReceiveM(std::unordered_map<std::string,std::string> & m);
+
         //fisher added
         std::set<int> doc_ids;
 
@@ -43,9 +45,8 @@ class Server{
         std::unordered_map<std::string,std::string> M_c;
         std::unordered_map<std::string,std::string> R_Doc;
         
-
-        //fisher added!!
         std::unordered_map<std::string,std::vector<std::string>> IMM;
+        std::unordered_map<std::string,std::string> M;
 
 };
  

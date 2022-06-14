@@ -23,4 +23,6 @@ int dec_aes_gcm(unsigned char *ciphertext, int ciphertext_len,
 //fisher added !!
 std::vector<std::string> split(std::string s, char c);
 
+void itoa(int value, char *s, int radix);
+
 #endif

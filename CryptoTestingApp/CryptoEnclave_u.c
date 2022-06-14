@@ -35,6 +35,17 @@ typedef struct ms_ecall_searchToken_t {
 	int ms_token_len;
 } ms_ecall_searchToken_t;
 
+typedef struct ms_ecall_verifyIDEnc_t {
+	unsigned char* ms_ID;
+	size_t ms_len;
+} ms_ecall_verifyIDEnc_t;
+
+typedef struct ms_ecall_SendOpIdN_t {
+	int ms_op;
+	unsigned char* ms_IdN;
+	int ms_len;
+} ms_ecall_SendOpIdN_t;
+
 typedef struct ms_ocall_print_string_t {
 	const char* ms_str;
 } ms_ocall_print_string_t;
@@ -362,6 +373,27 @@ sgx_status_t ecall_searchToken(sgx_enclave_id_t eid, unsigned char* token, int t
 	ms.ms_token = token;
 	ms.ms_token_len = token_len;
 	status = sgx_ecall(eid, 6, &ocall_table_CryptoEnclave, &ms);
+	return status;
+}
+
+sgx_status_t ecall_verifyIDEnc(sgx_enclave_id_t eid, unsigned char* ID, size_t len)
+{
+	sgx_status_t status;
+	ms_ecall_verifyIDEnc_t ms;
+	ms.ms_ID = ID;
+	ms.ms_len = len;
+	status = sgx_ecall(eid, 7, &ocall_table_CryptoEnclave, &ms);
+	return status;
+}
+
+sgx_status_t ecall_SendOpIdN(sgx_enclave_id_t eid, int op, unsigned char* IdN, int len)
+{
+	sgx_status_t status;
+	ms_ecall_SendOpIdN_t ms;
+	ms.ms_op = op;
+	ms.ms_IdN = IdN;
+	ms.ms_len = len;
+	status = sgx_ecall(eid, 8, &ocall_table_CryptoEnclave, &ms);
 	return status;
 }
 

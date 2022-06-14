@@ -18,6 +18,8 @@
 #include<map>
 #include<unordered_map>
 #include <openssl/rand.h>
+#include <openssl/sha.h>
+#include <openssl/cmac.h>
 #include<math.h>
 
 
@@ -203,7 +205,13 @@ unsigned char *gama_X2_plain,int gama_X2_len){
 }
 
 
-//main func
+void ocall_receive_PKi(unsigned char *Addr,int addr_len,unsigned char * PKi,int PKi_len){
+
+
+
+}
+
+
 int main()
 {
 	/* Setup enclave */
@@ -239,58 +247,145 @@ int main()
 	printf("Adding doc\n");
 
 	/*** Saving the V to DB(v)*************************************/
-	// for(int i=1;i <= total_file_no; i++){  
+	for(int i=1;i <= 2; i++){  
 		
 		docContent *fetch_data;
-		docContent *Enc_data;
 		std::string CompressData;
-		// std::vector<std::string> res;
+		std::string Enc_data;
+		
+		std::vector<std::string> ComSlices;
+
+		std::unordered_map<std::string,std::string> M;
 
 		fetch_data = (docContent *)malloc(sizeof( docContent));
-		Enc_data = (docContent *)malloc(sizeof(docContent));
 		myClient->ReadNextDoc(fetch_data);
 
-		printf("*******************Encrypting *****************\n");
-		std::cout<<fetch_data->content<<std::endl;
+		printf("*******************Compressing *****************\n");
+		//std::cout<<fetch_data->content<<std::endl;
+		std::cout<<"源文件流大小"<<fetch_data->content_length<<std::endl;
 
 		
-		Enc_data->id.id_length = fetch_data->id.id_length;
-		Enc_data->id.doc_id = (char *)malloc(Enc_data->id.id_length);
-		memcpy(Enc_data->id.doc_id,fetch_data->id.doc_id,fetch_data->id.id_length);
+
+		snappy::Compress(fetch_data->content,(unsigned long)fetch_data->content_length,&CompressData);
+		std::cout<<"压缩后流大小"<<CompressData.size()<<std::endl;
+
 		
-		Enc_data->content_length = fetch_data->content_length + AESGCM_MAC_SIZE + AESGCM_IV_SIZE;	
-		Enc_data->content = (char *)malloc(Enc_data->content_length);
+		//填充压缩后文件至200字节整数倍
+		myClient->PaddingCompressdata(CompressData);
+		std::cout<<"填充后加密前流大小 "<<CompressData.size()<<std::endl;
 
-		myClient->EncryptDoc(fetch_data,Enc_data);
+		printf("*******************Encrypting ******************\n");
+		Enc_data =  myClient->EncryptDoc(CompressData);
+		std::cout<<"加密后流大小 "<<Enc_data.size()<<std::endl;
+		//std::cout<<CompressData<<std::endl;
+	
+/* 		
+		//Verifying doc Enc
+		printf("*******************Verify Encrypting ******************\n");
+		std:: string CompressData2;
+		CompressData2 =  myClient->DecryptDoc(Enc_data); 
+		std::cout<<"加密后解压前流大小 "<<CompressData2.size()<<std::endl;
+
+		int stri = CompressData2.size()-1;
+		while(CompressData2[stri] == '#'){
+			CompressData2.erase(CompressData2.length()-1);
+			stri--;
+		}
+
+		//Verifying Compress
+		std::string UncompressData;
+		snappy::Uncompress(CompressData2.data(),(unsigned long)CompressData2.size(),&UncompressData);
+		std::cout<<"解压后流大小 "<<UncompressData.size()<<std::endl;
+	 */	
+
+
+/* 		if(!strcmp(fetch_data->content,UncompressData.data())){
+			std::cout<<"解压后流大小"<<UncompressData.size()<<std::endl;
+			std::cout<<"Compress Success!!!"<<std::endl;
+			//std::cout<<UncompressData<<std::endl;
+		} */
+
+		ID_pair id_pair;
 		
-		// Verifying doc Enc
-
-		// myClient->DecryptDoc(Enc_data,fetch_data);
-		// std::cout<<fetch_data->content<<std::endl;
-		// printf("*******************Verify Encrypting ******************\n");
-
-
-		snappy::Compress(Enc_data->content,(unsigned long)Enc_data->content_length,&CompressData);
+		//8 == 2 int
+		unsigned char * addr = (unsigned char *)malloc(8+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE);
+		unsigned char * ID = (unsigned char *)malloc(8);
 		
-		// //Verifying Compress
-		
-		// std::string UncompressData;
-		// snappy::Uncompress(CompressData.data(),(unsigned long)CompressData.size(),&UncompressData);
+		std::cout<<"************Slicing part**********"<<std::endl;
+		for(int j = 0;j<Enc_data.size()/COMSLICE_LEN; j++){
+			id_pair[0] = i;
+			id_pair[1] = j;
+			
+			memcpy(ID,&id_pair[0],4);
+			memcpy(ID+4,&id_pair[1],4);
+			
+			print_bytes(ID,8);
+			//printf("%s\n",t);
+			
+			//std::cout<<"i and j is "<<id_pair[0]<<" "<<id_pair[1]<<std::endl;
+			//print_bytes(ID,8);
 
-		// if(!strcmp(Enc_data->content,UncompressData.data())){
-		// 	// std::cout<<CompressData<<std::endl;
-		// 	std::cout<<"Compress Success!!!"<<std::endl;
+			enc_aes_gcm(ID,2*sizeof(int),KF1value,addr);
+			
+			
+			// print_bytes(addr,8+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE);
+			// printf("\n");
+			
+			//验证消息验证码mac
+			//ecall_verifyIDEnc(eid,ID,(size_t)8); 
+			
+			
+			//获取addr的前16个字节的消息验证码
+
+			std::string Addr;
+			for(int k = 0;k<AESGCM_MAC_SIZE;k++){
+				Addr.push_back(addr[k]);
+			}
+			
+/* 
+			//verify mac
+			print_bytes(addr,16);
+			std::cout<<Addr.size()<<std::endl;
+			print_bytes((unsigned char *)Addr.c_str(),16);
+ */
+
+			//获取当前加密字串的分片
+			std::string PK;
+			PK = Enc_data.substr(j*COMSLICE_LEN,COMSLICE_LEN);
+
+			M.insert(std::pair<std::string,std::string> {Addr,PK});
+			
+		}
+		std::cout<<"************Slicing part end!!!**********"<<std::endl;		
+		// std::cout<<"***************Now show the M contents******************"<<std::endl;
+		// for(auto i :M){
+		// 	std::cout<<i.first<<std::endl;
+		// 	std::cout<<i.second.size()<<std::endl;
 		// }
+		
+		
+		//sending {op,{id||N}} to enclave;
+		int N = Enc_data.size()/COMSLICE_LEN;
+		id_pair[0] = i;
+		id_pair[1] = N;
+		
+		memcpy(ID,&id_pair[0],4);
+		memcpy(ID+4,&id_pair[1],4);
+		
+		print_bytes(ID,8);
+
+		ecall_SendOpIdN(eid,0,ID,2*sizeof(int));
+
+		// //send M to server;
+		myServer->ReceiveM(M);
+
+		free(addr);
+		free(ID);
 
 		free(fetch_data->content);
 		free(fetch_data->id.doc_id);
 		free(fetch_data);
-
-		free(Enc_data->content);
-		free(Enc_data->id.doc_id);
-		free(Enc_data);
-
-	// }
+	}
 
 	
 	

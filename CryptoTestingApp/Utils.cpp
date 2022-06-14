@@ -37,7 +37,7 @@ int enc_aes_gcm(const unsigned char *plaintext, int plaintext_len,
     //对密文进行填充，填充大小写入final_len
     EVP_EncryptFinal(ctx, output+ AESGCM_MAC_SIZE+ AESGCM_IV_SIZE + ciphertext_len, &final_len);
 
-    std::cout<<std::endl<<"此次加密填充长度为"<<final_len<<std::endl;
+    //std::cout<<std::endl<<"此次加密填充长度为"<<final_len<<std::endl;
     
     // printf("AESGCM_MAC2 is \n");
     // for(int i = 0;i<AESGCM_MAC_SIZE;i++){
@@ -197,4 +197,54 @@ bool WriteNextBinaries(int file_reading_counter,string output){
     isOk = true;
 
     return isOk;
+}
+
+void itoa(int value, char *s, int radix)
+{
+    assert(s != NULL);              //s不能为空
+
+    // if(radix<2 || radix>36)
+    // {
+    //     std::cout<<"Radix wrong!Radix should be in [2,36]."<<std::endl;
+    //     return;
+    // }
+
+    bool flg = false;               //false表示字符串不添加负号
+    unsigned uValue;                //用来保存value转化的无符号数
+    char *tmp = s;                  //声明一个遍历指针
+    char table[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";//table用来表示进制
+
+    if(value<0 && radix==10)        //只有十进制数才区分正负，其它进制直接转换
+    {
+        flg = true;
+        uValue = (unsigned)-value;
+    }
+    else
+    {
+        uValue = (unsigned)value;
+    }
+
+    while(uValue > 0)               //逆序保存每位数
+    {
+        *tmp = table[uValue % radix];
+        uValue = uValue/radix;
+        tmp++;
+    }
+
+    if(flg)                         //添加负号(如果需要)和结尾符
+    {
+        *tmp = '-';
+    }
+    *tmp = '\0';
+    tmp--;
+
+    char ch;
+    while(tmp > s)                  //翻转字符串
+    {
+        ch = *s;
+        *s = *tmp;
+        *tmp = ch;
+        tmp--;
+        s++;
+    }
 }

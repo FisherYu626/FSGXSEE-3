@@ -75,25 +75,37 @@ void Client::ReadNextDoc(docContent *content){
 
 }
 
-// std::vector<std::string> Client::EncSlice(docContent *content,unsigned char * KFvalue){
-//     //encrptying doc
-//     docContent * EncDoc;
-//     EncDoc->id = content->id;
+/* std::vector<std::string> Client::EncSlice(docContent *content,unsigned char * KFvalue){
+    //encrptying doc
+    docContent * EncDoc;
+    EncDoc->id = content->id;
     
-//     EncDoc->content_length = enc_aes_gcm((unsigned char *)content->content,content->content_length,KFvalue,(unsigned char *)EncDoc->content);
+    EncDoc->content_length = enc_aes_gcm((unsigned char *)content->content,content->content_length,KFvalue,(unsigned char *)EncDoc->content);
 
-//     //verify encryption
+    //verify encryption
 
-//     dec_aes_gcm()
+    dec_aes_gcm();
 
     
+} */
 
+void Client::PaddingCompressdata(std::string & CompressData){
+    //为加密保存上下文的28个字节进行预留空间
+    int padding_len = COMSLICE_LEN- CompressData.size()%COMSLICE_LEN -AESGCM_MAC_SIZE - AESGCM_IV_SIZE ;
+    if(padding_len<0) padding_len = (padding_len + COMSLICE_LEN)%COMSLICE_LEN;
 
+    
+    std::string paddingstr(padding_len,'#');
+    
+    /*     
+    std::cout<<"paddinglen is "<<padding_len<<std::endl;
+    std::cout<<"paddingstr is "<<paddingstr<<std::endl; 
+    */
 
+    CompressData = CompressData+paddingstr;
 
-
-
-// }
+    return;
+}
 
 void Client::Del_GivenDocIndex(const int del_index, docId* delV_i){
     
@@ -128,18 +140,29 @@ void Client::Del_GivenDocArray(const int * del_arr, docId* delV, int n){
 //                                                         (unsigned char*)encrypted_doc->second.message);
 // }
 
-void Client::EncryptDoc(const docContent* data, docContent *encrypted_doc ){
+std::string Client::EncryptDoc(const std::string data){
+    unsigned char *temp = (unsigned char *)malloc(data.size()+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE);
 
-    encrypted_doc->content_length =  enc_aes_gcm((unsigned char *)data->content,data->content_length,KF1,(unsigned char *)encrypted_doc->content);
-    //std::cout<<"the len of enc doc is "<<encrypted_doc->content_length<<std::endl;
-    return;
+    int enc_len;
+    //std::cout<<"KF1 is "<<KF1<<std::endl;
+
+    enc_len =  enc_aes_gcm((unsigned char *)data.c_str(),data.size(),KF1,(unsigned char *)temp);
+
+    std::string enc_data((char *)temp,enc_len);
+    //std::cout<<"ENC data is"<<enc_data<<std::endl;
+    return enc_data;
 }
 
-void Client::DecryptDoc(docContent* encrypted_doc, docContent *data){
+std::string Client::DecryptDoc(const std::string enc_data){
+    unsigned char * temp = (unsigned char *)malloc(enc_data.size()-AESGCM_MAC_SIZE- AESGCM_IV_SIZE);
+    
+    int original_len;
+    original_len =  dec_aes_gcm((unsigned char *)enc_data.c_str(),enc_data.size(),KF1,temp);
 
-    data->content_length = dec_aes_gcm((unsigned char *)encrypted_doc->content,encrypted_doc->content_length,KF1,(unsigned char *)data->content);
+    std::string data((char *)temp,original_len);
     //std::cout<<"the len of enc doc is "<<encrypted_doc->content_length<<std::endl;
-    return;
+
+    return data;
 }
 
 
@@ -151,8 +174,8 @@ void Client::DecryptDocCollection(std::vector<std::string> Res){
 	    unsigned char *plaintext =(unsigned char*)malloc((enc_doc.size() - AESGCM_MAC_SIZE - AESGCM_IV_SIZE)*sizeof(unsigned char));
 	    original_len= dec_aes_gcm((unsigned char*)enc_doc.c_str(),enc_doc.size(),KF,plaintext);
       
-        //std::string doc_i((char*)plaintext,original_len);
-        //printf("Plain doc ==> %s\n",doc_i.c_str());
+        std::string doc_i((char*)plaintext,original_len);
+        printf("Plain doc ==> %s\n",doc_i.c_str());
     
     }
 }

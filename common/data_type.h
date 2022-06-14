@@ -13,6 +13,8 @@
 #include <utility>
 #include <unordered_map>
 #include<map>
+#include <assert.h>
+
 /* for all sources except OCALL/ECALL */
 
 //const std::string raw_doc_dir= "streaming/"; 
@@ -40,6 +42,7 @@ static unsigned char gcm_iv[] = {
 
 /************fisher added 2.0*********************************/
 #define P 3
+#define COMSLICE_LEN 200000
 /*********************************************************/
 typedef struct
 {
@@ -113,6 +116,7 @@ typedef std::array<int, 2> CT_pair;
 typedef std::array<int, 3> VCT_pair;
 typedef std::pair<int,CT_pair> VCT;
 
+typedef std::array<int,2> ID_pair;
 
 // yangxu add
 // std::set<int> doc_ids;

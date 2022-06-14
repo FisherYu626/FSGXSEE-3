@@ -35,8 +35,9 @@ class Client{
 
         //void EncryptDoc(const docContent *data, entry *encrypted_doc );
         //fisher overload
-        void EncryptDoc(const docContent* data, docContent *encrypted_doc );
-        void DecryptDoc(docContent* encrypted_doc, docContent *data);
+        std::string EncryptDoc(const std::string data);
+        std::string DecryptDoc(const std::string enc_data);
+        void PaddingCompressdata(std::string & CompressData);
 
         void DecryptDocCollection(std::vector<std::string> Res);
         void receive_vxGamaX(const unsigned char * vx_text,int vx_length,

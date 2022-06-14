@@ -88,6 +88,8 @@ sgx_status_t ecall_search(sgx_enclave_id_t eid, const char* keyword, size_t len)
 sgx_status_t ecall_printHelloWorld(sgx_enclave_id_t eid);
 sgx_status_t ecall_InsertVct(sgx_enclave_id_t eid, int vword, int c, int t);
 sgx_status_t ecall_searchToken(sgx_enclave_id_t eid, unsigned char* token, int token_len);
+sgx_status_t ecall_verifyIDEnc(sgx_enclave_id_t eid, unsigned char* ID, size_t len);
+sgx_status_t ecall_SendOpIdN(sgx_enclave_id_t eid, int op, unsigned char* IdN, int len);
 
 #ifdef __cplusplus
 }

@@ -7,12 +7,18 @@ Server::Server(){
   R_Doc.clear();
   M_I.clear();
   M_c.clear();
+
+  IMM.clear();
+  M.clear();
 }
 
 Server::~Server(){
   R_Doc.clear();
   M_I.clear();
   M_c.clear();
+
+  IMM.clear();
+  M.clear();
 
 }
 
@@ -182,3 +188,16 @@ void Server::RetrieveVGama(unsigned char * L_text,int L_length,
     return;
 
 }
+
+void Server::ReceiveM(std::unordered_map<std::string,std::string> & m){
+    for(auto i:m){
+      M.insert(i);
+
+/*       std::cout<<"now insert the addri"<<i.first<<std::endl;
+      std::cout<<"now insert the pk len is"<<i.second.size()<<std::endl; */
+    
+    }
+
+    return;
+}
+
