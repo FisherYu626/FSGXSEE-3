@@ -19,6 +19,7 @@ Client::Client(){
     file_reading_counter=0;
     RAND_bytes(KF1,ENC_KEY_SIZE);
     RAND_bytes(KF2,ENC_KEY_SIZE);
+    RAND_bytes(KF3,ENC_KEY_SIZE);
 }
 
 void Client::getKFValue(unsigned char * outKey){
@@ -26,9 +27,10 @@ void Client::getKFValue(unsigned char * outKey){
 }
 
 //fisher altered!
-void Client::getKFValues(unsigned char * outKey1,unsigned char * outKey2){
+void Client::getKFValues(unsigned char * outKey1,unsigned char * outKey2,unsigned char * outKey3){
     memcpy(outKey1,KF1,ENC_KEY_SIZE);
     memcpy(outKey2,KF2,ENC_KEY_SIZE);
+    memcpy(outKey3,KF3,ENC_KEY_SIZE);
 }
 
 void Client::ReadNextDoc(docContent *content){
@@ -150,6 +152,10 @@ std::string Client::EncryptDoc(const std::string data){
 
     std::string enc_data((char *)temp,enc_len);
     //std::cout<<"ENC data is"<<enc_data<<std::endl;
+    
+    free(temp);
+    temp = NULL;
+
     return enc_data;
 }
 
@@ -161,6 +167,9 @@ std::string Client::DecryptDoc(const std::string enc_data){
 
     std::string data((char *)temp,original_len);
     //std::cout<<"the len of enc doc is "<<encrypted_doc->content_length<<std::endl;
+
+    free(temp);
+    temp = NULL;
 
     return data;
 }
@@ -375,6 +384,33 @@ T * Client:: Generate_Token(unsigned char * KF1Value,int v,int cmp,int q){
     free(k0_cipher);
     free(k0);
     return t;
+}
+
+std::string Client::Generate_Token(std::string keyword){
+    std::string s_str = std::to_string(s);
+
+    unsigned char * kq = (unsigned char *)malloc(ENC_KEY_SIZE);
+    unsigned char * enc_kq = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+ENC_KEY_SIZE);
+
+    
+    enc_aes_gcm((unsigned char *)s_str.c_str(),s_str.size(),KF3,enc_kq);
+    memcpy(kq,enc_kq,ENC_KEY_SIZE);
+    
+
+    print_bytes(kq,16);
+
+    unsigned char * TKq = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+keyword.size());
+    enc_aes_gcm((unsigned char *)keyword.c_str(),keyword.size(),kq,TKq);
+
+    std::string TKq_str((char *)TKq,AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+keyword.size());
+
+    AddS(); 
+
+    free(kq);
+    free(enc_kq);
+    free(TKq);
+
+    return TKq_str;
 }
 
 void Client::receive_vxGamaX(const unsigned char * vx_text,int vx_length,

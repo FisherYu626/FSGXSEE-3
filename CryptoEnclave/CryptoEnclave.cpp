@@ -19,6 +19,8 @@
 #include <list>
 #include "../common/data_type.h"
 
+#include"snappy.h"
+#include "BloomFilter.h"
 // change to malloc for tokens, run ulimit -s 65536 to set stack size to 
 // 65536 KB in linux 
 
@@ -28,12 +30,22 @@ unsigned char KW[ENC_KEY_SIZE] = {0};
 unsigned char KC[ENC_KEY_SIZE] = {0};
 unsigned char KF1[ENC_KEY_SIZE] = {0};
 unsigned char KF2[ENC_KEY_SIZE] = {0};
+unsigned char KF3[ENC_KEY_SIZE] = {0};
 
 std::unordered_map<std::string, int> ST;
 std::unordered_map<std::string, std::vector<std::string>> D;
 
 std::vector<std::string> d;
 
+int w_min = __INT_MAX__;
+int w_max = 0;
+
+
+//generate key for BF
+unsigned char K_BF[ENC_KEY_SIZE] = {0};
+BloomFilter *myBloomFilter1;
+
+BloomFilter *myBloomFilter2;
 
 
 //fisher added!
@@ -45,14 +57,23 @@ std::vector<Qsgx *> QsgxCache;
 
 
 /*** setup */
-void ecall_init(unsigned char *keyF1,unsigned char *keyF2, size_t len){ 
+void ecall_init(unsigned char *keyF1,unsigned char *keyF2,unsigned char *keyF3, size_t len){ 
 	d.reserve(750000);
     //fisher altered 2.0 将client中的kf1 kf2传入enclave
     memcpy(KF1,keyF1,len);
     memcpy(KF2,keyF2,len);
+    memcpy(KF3,keyF3,len);
     //此处生产2个长度为16字节的随机数
     sgx_read_rand(KW, ENC_KEY_SIZE);
     sgx_read_rand(KC, ENC_KEY_SIZE);
+
+    //init Bloom
+    sgx_read_rand(K_BF, ENC_KEY_SIZE); //初始化k_{BF}
+    uint64_t vector_size = 35000000;//4mb hold up to 1.5 million key,value pairs 初始化b
+    uint8_t numHashs = 23; // 初始化h
+    myBloomFilter1 = new BloomFilter(vector_size,numHashs); //初始化Bloom filter
+    myBloomFilter2 = new BloomFilter(vector_size,numHashs); //初始化Bloom filter
+
 
 }
 
@@ -1197,6 +1218,7 @@ void ecall_SendOpIdN(int op,unsigned char * IdN,int len){
         unsigned char * ID = (unsigned char *)malloc(8);
         unsigned char * addr = (unsigned char *)malloc(8+AESGCM_MAC_SIZE+ AESGCM_IV_SIZE);
         unsigned char * pki = (unsigned char *)malloc(COMSLICE_LEN);
+        
         for(int i = 0;i<N;i++){
             memcpy(ID,&id,4);
             memcpy(ID+4,&i,4);
@@ -1210,33 +1232,323 @@ void ecall_SendOpIdN(int op,unsigned char * IdN,int len){
                 Addr.push_back(addr[k]);
             }
 
+            //printf("%s",Addr);
+            ocall_retrieve_PKi((unsigned char *) Addr.c_str(),AESGCM_MAC_SIZE,pki,COMSLICE_LEN);
+            //printf("%s",pki);
+            //print_bytes(pki,COMSLICE_LEN);
 
-
-
-
-            ocall_receive_Pki((unsigned char *) Addr.c_str(),AESGCM_MAC_SIZE,pki,COMSLICE_LEN);
-            
-            std::string PKi(pki);
+            std::string PKi((char*)pki,COMSLICE_LEN);
             doc.push_back(PKi);
+
+            //printf("%d\n",PKi.size());
         
         }
- 
 
+        std::string enc_doc_content;
+        std::string dec_doc_content;
+        std::string unCom_doc_content;
+        
+        //恢复密文
+        for(auto i:doc){
+            enc_doc_content += i;
+            //printf("%s\n",i);
+        }
+
+        //printf("%s\n",enc_doc_content);
+
+        //解密密文
+        dec_doc_content = DecryptDoc(enc_doc_content,KF1);
+        printf("解密后解压前流大小 %d\n",dec_doc_content.size());
+        //printf("%s",dec_doc_content.c_str());
+
+        int stri = dec_doc_content.size()-1;
+		while(dec_doc_content[stri] == '#'){
+			dec_doc_content.erase(dec_doc_content.length()-1);
+			stri--;
+		}
+
+        snappy::Uncompress(dec_doc_content.data(),(unsigned long)dec_doc_content.size(),&unCom_doc_content);
+        printf("解压后流大小 %d",unCom_doc_content.size());
+        
+        printf("解压后流 %s\n",unCom_doc_content.c_str());
+
+
+        std::set<std::string> Wset;
+
+        //parse content to keywords splited by comma
+        std::vector<std::string> wordList;
+        wordList = wordTokenize((char * )unCom_doc_content.c_str(),unCom_doc_content.size());
+        //yangxu altered!
+        //////////////////////////////////////////////////////
+        int pair_no = 0;
+
+    
+        for(std::vector<std::string>::iterator it = wordList.begin(); it != wordList.end(); ++it) {
+        
+            std::string word = (*it);
+            //更新 n_min; n_max 放在这里
+            int word_int = stoi((*it));
+            w_max = word_int>w_max? word_int:w_max;
+            w_min = word_int<w_min? word_int:w_min;
+
+            
+            //update bloom filter1
+            unsigned char * m = (unsigned char *)malloc(word.size());
+            memcpy(m,word.c_str(),word.size());
+
+            size_t len2 = ENTRY_HASH_KEY_LEN_128 + ENC_KEY_SIZE;
+            unsigned char *m_prime = (unsigned char *) malloc(len2 * sizeof(unsigned char));
+            hash_SHA128_key(K_BF,ENC_KEY_SIZE, m,word.size(),m_prime);
+            //print_bytes(m_prime,16);
+            
+            myBloomFilter1->add((uint8_t*)m_prime,len2);
+
+
+            std::string wordBits = String2bit(word,KEYWORD_BIT_LENGTH);
+            // printf(wordBits.c_str());
+            for(int i = 0;i<wordBits.length();i++){
+                std::string _w = wordBits.substr(0,i+1);
+                if(Wset.count(_w)){
+                    continue;
+                }else{
+                    pair_no += 1;
+                    Wset.insert(_w);
+                }
+            }
+
+            free(m);
+            m = NULL;
+            free(m_prime);
+            m_prime = NULL;
+        }
+
+        rand_t u_arr[pair_no];
+        rand_t v_arr[pair_no];
+
+        int index = 0;
+
+        for(auto _w:Wset){
+
+            int c=0;
+
+            std::unordered_map<std::string,int>::const_iterator got = ST.find(_w);
+            if ( got == ST.end()) {
+                c = 0;
+            }else{
+                c = got->second;
+            }
+
+            c++;
+
+            //update ST
+            got = ST.find(_w);
+            if( got == ST.end()){
+                ST.insert(std::pair<std::string,int>(_w,c));
+            } else{
+                ST.at(_w) = c;
+            }
+
+            unsigned char *kw =  (unsigned char *) malloc(ENTRY_HASH_KEY_LEN_128); 
+            //std::string c_str = std::to_string(c);
+            hash_SHA128(KF2,_w.c_str(),_w.length(),kw);
+
+            //print_bytes(kw,16);
+
+            //len is used for hash_SHA128_key multiple times
+            size_t u_len = ENTRY_HASH_KEY_LEN_128;
+            //generate a pair (u,v)
+            unsigned char *u = (unsigned char *) malloc(u_len * sizeof(unsigned char));
+
+            std::string id_str = std::to_string(id);
+            hash_SHA128(kw,id_str.c_str(),id_str.length(),u);
+            //print_bytes(u,16);
+
+            int wi;
+            std::string _w2;
+            
+            if(_w == "#"){
+                wi = -1;
+
+            }else{
+                //printf("_w is %s\n",_w);
+                _w2 = _w.substr(1);
+                //printf("_w-# is %s\n",_w2);
+                wi = BitString2Ten(_w2);
+                printf("Converted num is %d\n",wi);
+            }
+
+            wi = wi^c;
+            std::string wic_bitstr =  std::to_string(wi);
+
+            
+            
+            //wic_bitstr包含"#"  !!!!!
+            //std::string wic_bitstr =  Int2bit(wi,KEYWORD_BIT_LENGTH);
+
+            printf("wic_bitstr is %s\n",wic_bitstr);
+            int v_len = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+wic_bitstr.size();
+            unsigned char * v = (unsigned char *)malloc(v_len);
+
+            enc_aes_gcm(kw,wic_bitstr.c_str(),wic_bitstr.size(),v,v_len);
+            printf("v is ");
+            print_bytes(v,v_len);
+            
+
+            memcpy(&u_arr[index].content,u,u_len);
+            u_arr[index].content_length = u_len;
+
+            memcpy(&v_arr[index].content,v,v_len);
+            v_arr[index].content_length = v_len;
+
+            
+            index++;
+
+
+            //update bloom filter2
+/*             unsigned char * m = (unsigned char *)malloc(word.size());
+            memcpy(m,word.c_str(),word.size()); */
+
+            std::string wid_str = _w + std::to_string(id);
+
+            printf("wid_str is %s\n",wid_str);
+            printf("wid_str len is %d\n",wid_str.size());
+
+            size_t len2 = ENTRY_HASH_KEY_LEN_128 + ENC_KEY_SIZE;
+            unsigned char *wid_prime = (unsigned char *) malloc(len2 * sizeof(unsigned char));
+            hash_SHA128_key(K_BF,ENC_KEY_SIZE, wid_str.c_str(),wid_str.size(),wid_prime);
+            //print_bytes(m_prime,16);
+            
+            myBloomFilter2->add((uint8_t*)wid_prime,len2);
+
+
+
+
+            free(kw);
+            free(u);
+            free(v);
+            kw = NULL;
+            u = NULL;
+            v = NULL;
+        }
+        
+        printf("\nw_min is %d\n",w_min);
+        printf("w_max is %d\n",w_max);
+
+        ocall_transfer_uv_pairs(u_arr,
+                                v_arr,
+                                pair_no, sizeof(rand_t));
 
         free(ID);
         free(addr);
         free(pki);
 
-
-
-
-
     }else if(op == 1){
+        std::string s("hello worldwwwwwwwwwwwwwwwwwwww");
+        std::string t;
+        
+        snappy::Compress(s.data(),(size_t)s.size(),&t);
+        printf("%s\n",t);
 
+
+        std::string tt;
+        
+        snappy::Uncompress(t.data(),t.size(),&tt);
+        
+        printf("%s\n",tt.c_str());
 
     }
 
 
+
+
+    return;
+}
+void ecall_search_tkq(unsigned char * token,int token_len){
+    
+    s++;
+
+    std::string s_str = std::to_string(s);
+
+    unsigned char * kq = (unsigned char *)malloc(ENC_KEY_SIZE);
+    unsigned char * enc_kq = (unsigned char *)malloc(AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+ENC_KEY_SIZE);
+    int enc_kq_len = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+ENC_KEY_SIZE;
+    enc_aes_gcm(KF3,(unsigned char *)s_str.c_str(),s_str.size(),enc_kq,enc_kq_len);
+
+    memcpy(kq,enc_kq,ENC_KEY_SIZE);
+
+    print_bytes(kq,16);
+
+    std::string token_str((char *)token,token_len);
+
+    int dec_tkq_len = token_len-AESGCM_MAC_SIZE - AESGCM_IV_SIZE;
+    unsigned char * dec_tkq = (unsigned char *)malloc(dec_tkq_len);
+
+    dec_aes_gcm(kq,token,token_len,dec_tkq,dec_tkq_len);
+
+    std::string keyword((char *)dec_tkq,dec_tkq_len);
+
+    printf("%s",keyword);
+
+    //init keys
+    std::vector<int> keyword_int = split(keyword,',');
+    int a = keyword_int[0];
+    int b = keyword_int[1];
+
+    std::vector<std::string> wset;
+
+/*     printf("a is %d",a);
+    printf("b is %d",b); */
+
+    if(a <= w_min&&b >= w_max) {
+        wset.push_back("#");
+    }else{
+        //update bloom filter1
+        std::string a_str = std::to_string(a);
+        unsigned char * m = (unsigned char *)malloc(a_str.size());
+        memcpy(m,a_str.c_str(),a_str.size());
+
+        size_t len2 = ENTRY_HASH_KEY_LEN_128 + ENC_KEY_SIZE;
+        unsigned char *m_prime = (unsigned char *) malloc(len2 * sizeof(unsigned char));
+        hash_SHA128_key(K_BF,ENC_KEY_SIZE, m,a_str.size(),m_prime);
+
+        while(!myBloomFilter1->possiblyContains((uint8_t *)m_prime,len2)){
+            a++;
+            a_str = std::to_string(a);
+            memcpy(m,a_str.c_str(),a_str.size());
+
+            hash_SHA128_key(K_BF,ENC_KEY_SIZE, m,a_str.size(),m_prime);
+        }
+
+        printf("\na is %d\n",a);
+
+        std::string b_str = std::to_string(b);
+    
+        memcpy(m,b_str.c_str(),b_str.size());
+
+        hash_SHA128_key(K_BF,ENC_KEY_SIZE, m,b_str.size(),m_prime);
+
+        while(!myBloomFilter1->possiblyContains((uint8_t *)m_prime,len2)){
+            b--;
+            b_str = std::to_string(b);
+            memcpy(m,b_str.c_str(),b_str.size());
+
+            hash_SHA128_key(K_BF,ENC_KEY_SIZE, m,b_str.size(),m_prime);
+        }
+
+        printf("\nb is %d\n",b);
+        
+
+        wset = GetBRCm(a,b);
+        
+        free(m);
+        free(m_prime);
+    }
+    printf("getbrecm size: %d",wset.size());
+
+
+    free(kq);
+    free(enc_kq);
+    free(dec_tkq);
 
 
     return;

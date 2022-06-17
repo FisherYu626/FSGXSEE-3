@@ -312,6 +312,7 @@ std::vector<std::string> GetBRCm(int a,int b){
     return res;
 }
 
+
 std::vector<int> split(std:: string s,const char flag) {
     std::vector<int> res;
 
@@ -432,3 +433,31 @@ bool QincludesVi(std::vector<Qsgx *> & QsgxCache,int vi){
 
 //     return (a->vct.first)<(b->vct.first);
 // }
+
+std::string DecryptDoc(const std::string enc_data,unsigned char * KFvalue){
+    unsigned char * temp = (unsigned char *)malloc(enc_data.size()-AESGCM_MAC_SIZE- AESGCM_IV_SIZE);
+    unsigned char KF[ENC_KEY_SIZE];
+
+    memcpy(&KF,KFvalue,ENC_KEY_SIZE);
+    // print_bytes(KFvalue,ENC_KEY_SIZE);
+    // print_bytes(KF,ENC_KEY_SIZE);
+    
+
+    
+    int original_len = enc_data.size()-AESGCM_MAC_SIZE- AESGCM_IV_SIZE ;
+
+   
+    dec_aes_gcm(KF,(unsigned char *)enc_data.c_str(),enc_data.size(),temp,enc_data.size()-AESGCM_MAC_SIZE- AESGCM_IV_SIZE);
+    //print_bytes((unsigned char *)enc_data.data(),original_len);
+    
+    //print_bytes(temp,original_len);
+    // original_len =  dec_aes_gcm((unsigned char *)enc_data.c_str(),enc_data.size(),KF1,temp);
+
+    std::string data((char *)temp,original_len);
+    //
+
+    free(temp);
+    temp = NULL;
+
+    return data;
+}

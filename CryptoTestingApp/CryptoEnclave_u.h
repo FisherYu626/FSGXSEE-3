@@ -60,6 +60,14 @@ void SGX_UBRIDGE(SGX_NOCONVENTION, ocall_receive_R, (unsigned char* R, int R_len
 #define OCALL_SENDLVGAMA_DEFINED__
 void SGX_UBRIDGE(SGX_NOCONVENTION, ocall_sendLVGAMA, (unsigned char* L2, int L2_len, unsigned char* V2, int V2_len, unsigned char* gama_X2_plain, int gama_X2_len));
 #endif
+#ifndef OCALL_RETRIEVE_PKI_DEFINED__
+#define OCALL_RETRIEVE_PKI_DEFINED__
+void SGX_UBRIDGE(SGX_NOCONVENTION, ocall_retrieve_PKi, (unsigned char* Addr, int addr_len, unsigned char* PKi, int PK_len));
+#endif
+#ifndef OCALL_TRANSFER_UV_PAIRS_DEFINED__
+#define OCALL_TRANSFER_UV_PAIRS_DEFINED__
+void SGX_UBRIDGE(SGX_NOCONVENTION, ocall_transfer_uv_pairs, (const void* u_arr, const void* v_arr, int pair_count, int rand_size));
+#endif
 #ifndef SGX_OC_CPUIDEX_DEFINED__
 #define SGX_OC_CPUIDEX_DEFINED__
 void SGX_UBRIDGE(SGX_CDECL, sgx_oc_cpuidex, (int cpuinfo[4], int leaf, int subleaf));
@@ -81,13 +89,14 @@ int SGX_UBRIDGE(SGX_CDECL, sgx_thread_setwait_untrusted_events_ocall, (const voi
 int SGX_UBRIDGE(SGX_CDECL, sgx_thread_set_multiple_untrusted_events_ocall, (const void** waiters, size_t total));
 #endif
 
-sgx_status_t ecall_init(sgx_enclave_id_t eid, unsigned char* keyF1, unsigned char* keyF2, size_t len);
+sgx_status_t ecall_init(sgx_enclave_id_t eid, unsigned char* keyF1, unsigned char* keyF2, unsigned char* keyF3, size_t len);
 sgx_status_t ecall_addDoc(sgx_enclave_id_t eid, char* doc_id, size_t id_length, char* content, int content_length);
 sgx_status_t ecall_delDoc(sgx_enclave_id_t eid, char* doc_id, size_t id_length);
 sgx_status_t ecall_search(sgx_enclave_id_t eid, const char* keyword, size_t len);
 sgx_status_t ecall_printHelloWorld(sgx_enclave_id_t eid);
 sgx_status_t ecall_InsertVct(sgx_enclave_id_t eid, int vword, int c, int t);
 sgx_status_t ecall_searchToken(sgx_enclave_id_t eid, unsigned char* token, int token_len);
+sgx_status_t ecall_search_tkq(sgx_enclave_id_t eid, unsigned char* token, int token_len);
 sgx_status_t ecall_verifyIDEnc(sgx_enclave_id_t eid, unsigned char* ID, size_t len);
 sgx_status_t ecall_SendOpIdN(sgx_enclave_id_t eid, int op, unsigned char* IdN, int len);
 

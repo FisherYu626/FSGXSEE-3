@@ -9,7 +9,7 @@ Server::Server(){
   M_c.clear();
 
   IMM.clear();
-  M.clear();
+  EDB.clear();
 }
 
 Server::~Server(){
@@ -18,7 +18,7 @@ Server::~Server(){
   M_c.clear();
 
   IMM.clear();
-  M.clear();
+  EDB.clear();
 
 }
 
@@ -191,13 +191,65 @@ void Server::RetrieveVGama(unsigned char * L_text,int L_length,
 
 void Server::ReceiveM(std::unordered_map<std::string,std::string> & m){
     for(auto i:m){
+      EDB.insert(i);
       M.insert(i);
 
 /*       std::cout<<"now insert the addri"<<i.first<<std::endl;
-      std::cout<<"now insert the pk len is"<<i.second.size()<<std::endl; */
-    
+      std::cout<<"now insert the pk len is"<<i.second<<std::endl; 
+    */ 
+      std::cout<<"Inserting part\n";
+
+
+      print_bytes((unsigned char *)i.first.c_str(),16);
+
+      std::cout<<"Inserting end\n";
     }
 
     return;
 }
 
+void Server::RetreivePKi(unsigned char *Addr,int addr_len,unsigned char * PKi,int PKi_len){
+    std::string key = std::string((char *)Addr,16);
+
+    print_bytes((unsigned char *)key.c_str(),16);
+
+    if(EDB.count(key)){
+      printf("retreive EDB success!!!!\n");
+      const char *pki = EDB[key].c_str();
+      memcpy(PKi,pki,PKi_len);
+    }else{
+      printf("retreive EDB error!!!!\n");
+
+    }
+    //print_bytes(PKi,PKi_len);
+
+    return;
+}
+
+void Server::Receive_uv_pairs(rand_t *u_arr,rand_t *v_arr,int pair_count){ 
+  
+	for(int indexTest = 0; indexTest < pair_count; indexTest++){
+
+      std::string key1((char*)u_arr[indexTest].content, u_arr[indexTest].content_length);
+      std::string value1((char*)v_arr[indexTest].content, v_arr[indexTest].content_length);
+
+      if(key1.empty()||value1.empty()) printf("Big error!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+
+
+      T1.insert(std::pair<std::string,std::string>(key1,value1));
+
+      int count = 0;
+
+      for(auto i:M){
+
+          std::string value1_count = value1 + std::to_string(count);
+          T2.insert(std::pair<std::string,std::string>(value1_count,i.first));
+
+          count++;
+      }
+
+  }
+
+  M.clear();
+
+}

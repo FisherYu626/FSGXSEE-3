@@ -4,6 +4,7 @@
 typedef struct ms_ecall_init_t {
 	unsigned char* ms_keyF1;
 	unsigned char* ms_keyF2;
+	unsigned char* ms_keyF3;
 	size_t ms_len;
 } ms_ecall_init_t;
 
@@ -34,6 +35,11 @@ typedef struct ms_ecall_searchToken_t {
 	unsigned char* ms_token;
 	int ms_token_len;
 } ms_ecall_searchToken_t;
+
+typedef struct ms_ecall_search_tkq_t {
+	unsigned char* ms_token;
+	int ms_token_len;
+} ms_ecall_search_tkq_t;
 
 typedef struct ms_ecall_verifyIDEnc_t {
 	unsigned char* ms_ID;
@@ -124,6 +130,20 @@ typedef struct ms_ocall_sendLVGAMA_t {
 	unsigned char* ms_gama_X2_plain;
 	int ms_gama_X2_len;
 } ms_ocall_sendLVGAMA_t;
+
+typedef struct ms_ocall_retrieve_PKi_t {
+	unsigned char* ms_Addr;
+	int ms_addr_len;
+	unsigned char* ms_PKi;
+	int ms_PK_len;
+} ms_ocall_retrieve_PKi_t;
+
+typedef struct ms_ocall_transfer_uv_pairs_t {
+	const void* ms_u_arr;
+	const void* ms_v_arr;
+	int ms_pair_count;
+	int ms_rand_size;
+} ms_ocall_transfer_uv_pairs_t;
 
 typedef struct ms_sgx_oc_cpuidex_t {
 	int* ms_cpuinfo;
@@ -241,6 +261,22 @@ static sgx_status_t SGX_CDECL CryptoEnclave_ocall_sendLVGAMA(void* pms)
 	return SGX_SUCCESS;
 }
 
+static sgx_status_t SGX_CDECL CryptoEnclave_ocall_retrieve_PKi(void* pms)
+{
+	ms_ocall_retrieve_PKi_t* ms = SGX_CAST(ms_ocall_retrieve_PKi_t*, pms);
+	ocall_retrieve_PKi(ms->ms_Addr, ms->ms_addr_len, ms->ms_PKi, ms->ms_PK_len);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL CryptoEnclave_ocall_transfer_uv_pairs(void* pms)
+{
+	ms_ocall_transfer_uv_pairs_t* ms = SGX_CAST(ms_ocall_transfer_uv_pairs_t*, pms);
+	ocall_transfer_uv_pairs(ms->ms_u_arr, ms->ms_v_arr, ms->ms_pair_count, ms->ms_rand_size);
+
+	return SGX_SUCCESS;
+}
+
 static sgx_status_t SGX_CDECL CryptoEnclave_sgx_oc_cpuidex(void* pms)
 {
 	ms_sgx_oc_cpuidex_t* ms = SGX_CAST(ms_sgx_oc_cpuidex_t*, pms);
@@ -283,9 +319,9 @@ static sgx_status_t SGX_CDECL CryptoEnclave_sgx_thread_set_multiple_untrusted_ev
 
 static const struct {
 	size_t nr_ocall;
-	void * table[16];
+	void * table[18];
 } ocall_table_CryptoEnclave = {
-	16,
+	18,
 	{
 		(void*)CryptoEnclave_ocall_print_string,
 		(void*)CryptoEnclave_ocall_transfer_encrypted_entries,
@@ -298,6 +334,8 @@ static const struct {
 		(void*)CryptoEnclave_ocall_receive_VxGamaX,
 		(void*)CryptoEnclave_ocall_receive_R,
 		(void*)CryptoEnclave_ocall_sendLVGAMA,
+		(void*)CryptoEnclave_ocall_retrieve_PKi,
+		(void*)CryptoEnclave_ocall_transfer_uv_pairs,
 		(void*)CryptoEnclave_sgx_oc_cpuidex,
 		(void*)CryptoEnclave_sgx_thread_wait_untrusted_event_ocall,
 		(void*)CryptoEnclave_sgx_thread_set_untrusted_event_ocall,
@@ -305,12 +343,13 @@ static const struct {
 		(void*)CryptoEnclave_sgx_thread_set_multiple_untrusted_events_ocall,
 	}
 };
-sgx_status_t ecall_init(sgx_enclave_id_t eid, unsigned char* keyF1, unsigned char* keyF2, size_t len)
+sgx_status_t ecall_init(sgx_enclave_id_t eid, unsigned char* keyF1, unsigned char* keyF2, unsigned char* keyF3, size_t len)
 {
 	sgx_status_t status;
 	ms_ecall_init_t ms;
 	ms.ms_keyF1 = keyF1;
 	ms.ms_keyF2 = keyF2;
+	ms.ms_keyF3 = keyF3;
 	ms.ms_len = len;
 	status = sgx_ecall(eid, 0, &ocall_table_CryptoEnclave, &ms);
 	return status;
@@ -376,13 +415,23 @@ sgx_status_t ecall_searchToken(sgx_enclave_id_t eid, unsigned char* token, int t
 	return status;
 }
 
+sgx_status_t ecall_search_tkq(sgx_enclave_id_t eid, unsigned char* token, int token_len)
+{
+	sgx_status_t status;
+	ms_ecall_search_tkq_t ms;
+	ms.ms_token = token;
+	ms.ms_token_len = token_len;
+	status = sgx_ecall(eid, 7, &ocall_table_CryptoEnclave, &ms);
+	return status;
+}
+
 sgx_status_t ecall_verifyIDEnc(sgx_enclave_id_t eid, unsigned char* ID, size_t len)
 {
 	sgx_status_t status;
 	ms_ecall_verifyIDEnc_t ms;
 	ms.ms_ID = ID;
 	ms.ms_len = len;
-	status = sgx_ecall(eid, 7, &ocall_table_CryptoEnclave, &ms);
+	status = sgx_ecall(eid, 8, &ocall_table_CryptoEnclave, &ms);
 	return status;
 }
 
@@ -393,7 +442,7 @@ sgx_status_t ecall_SendOpIdN(sgx_enclave_id_t eid, int op, unsigned char* IdN, i
 	ms.ms_op = op;
 	ms.ms_IdN = IdN;
 	ms.ms_len = len;
-	status = sgx_ecall(eid, 8, &ocall_table_CryptoEnclave, &ms);
+	status = sgx_ecall(eid, 9, &ocall_table_CryptoEnclave, &ms);
 	return status;
 }
 

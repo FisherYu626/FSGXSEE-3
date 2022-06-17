@@ -41,7 +41,7 @@ void Enclave_Generate_Vx2(unsigned char * vx,unsigned char * gamax_cipher,
     unsigned char *v,unsigned char * gama_cipher);
 bool QincludesVi(std::vector<Qsgx *> & QsgxCache,int vi);
 
-
+std::string DecryptDoc(const std::string enc_data,unsigned char * KFvalue);
 
 /********************************************************/
 //improved

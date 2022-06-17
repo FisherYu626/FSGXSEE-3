@@ -18,7 +18,7 @@
 /* for all sources except OCALL/ECALL */
 
 //const std::string raw_doc_dir= "streaming/"; 
-const std::string raw_doc_dir= "streaming10/"; 
+const std::string raw_doc_dir= "streaming02/"; 
 
 #define AESGCM_IV_SIZE 12
 static unsigned char gcm_iv[] = {
@@ -37,12 +37,12 @@ static unsigned char gcm_iv[] = {
 #define RAND_LEN 64// 256 // 2048-bit
 
 /************fisher added*********************************/
-#define KEYWORD_BIT_LENGTH 15
+#define KEYWORD_BIT_LENGTH 14
 /*********************************************************/
 
 /************fisher added 2.0*********************************/
 #define P 3
-#define COMSLICE_LEN 200000
+#define COMSLICE_LEN 200
 /*********************************************************/
 typedef struct
 {

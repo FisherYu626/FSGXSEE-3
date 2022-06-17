@@ -15,13 +15,14 @@
 extern "C" {
 #endif
 
-void ecall_init(unsigned char* keyF1, unsigned char* keyF2, size_t len);
+void ecall_init(unsigned char* keyF1, unsigned char* keyF2, unsigned char* keyF3, size_t len);
 void ecall_addDoc(char* doc_id, size_t id_length, char* content, int content_length);
 void ecall_delDoc(char* doc_id, size_t id_length);
 void ecall_search(const char* keyword, size_t len);
 void ecall_printHelloWorld(void);
 void ecall_InsertVct(int vword, int c, int t);
 void ecall_searchToken(unsigned char* token, int token_len);
+void ecall_search_tkq(unsigned char* token, int token_len);
 void ecall_verifyIDEnc(unsigned char* ID, size_t len);
 void ecall_SendOpIdN(int op, unsigned char* IdN, int len);
 
@@ -36,6 +37,8 @@ sgx_status_t SGX_CDECL ocall_retrieve_VGama(unsigned char* L_text, int L_length,
 sgx_status_t SGX_CDECL ocall_receive_VxGamaX(unsigned char* vx_text, int vx_length, unsigned char* gamax_plain, int gamax_plain_len, int vi);
 sgx_status_t SGX_CDECL ocall_receive_R(unsigned char* R, int R_len);
 sgx_status_t SGX_CDECL ocall_sendLVGAMA(unsigned char* L2, int L2_len, unsigned char* V2, int V2_len, unsigned char* gama_X2_plain, int gama_X2_len);
+sgx_status_t SGX_CDECL ocall_retrieve_PKi(unsigned char* Addr, int addr_len, unsigned char* PKi, int PK_len);
+sgx_status_t SGX_CDECL ocall_transfer_uv_pairs(const void* u_arr, const void* v_arr, int pair_count, int rand_size);
 sgx_status_t SGX_CDECL sgx_oc_cpuidex(int cpuinfo[4], int leaf, int subleaf);
 sgx_status_t SGX_CDECL sgx_thread_wait_untrusted_event_ocall(int* retval, const void* self);
 sgx_status_t SGX_CDECL sgx_thread_set_untrusted_event_ocall(int* retval, const void* waiter);

@@ -205,11 +205,24 @@ unsigned char *gama_X2_plain,int gama_X2_len){
 }
 
 
-void ocall_receive_PKi(unsigned char *Addr,int addr_len,unsigned char * PKi,int PKi_len){
+void ocall_retrieve_PKi(unsigned char *Addr,int addr_len,unsigned char * PKi,int PKi_len){
 
+	myServer->RetreivePKi(Addr,addr_len,PKi,PKi_len);
+	// printf("%s",PKi);
 
+	return;
+}
+
+void ocall_transfer_uv_pairs(const void *u_arr,
+							const void *v_arr, 
+							int pair_count, int rand_size){
+
+	myServer->Receive_uv_pairs((rand_t *)u_arr,
+								(rand_t *)v_arr,
+								pair_count);
 
 }
+
 
 
 int main()
@@ -234,11 +247,12 @@ int main()
 	//Enclave
 	unsigned char KF1value[ENC_KEY_SIZE];
 	unsigned char KF2value[ENC_KEY_SIZE];
-	myClient->getKFValues(KF1value,KF2value);
+	unsigned char KF3value[ENC_KEY_SIZE];
+	myClient->getKFValues(KF1value,KF2value,KF3value);
 
 
 	//fisher altered!
-	ecall_init(eid,KF1value,KF2value,(size_t)ENC_KEY_SIZE);
+	ecall_init(eid,KF1value,KF2value,KF3value,(size_t)ENC_KEY_SIZE);
 
 
 	/**************************Build Process **************************************/
@@ -247,7 +261,7 @@ int main()
 	printf("Adding doc\n");
 
 	/*** Saving the V to DB(v)*************************************/
-	for(int i=1;i <= 2; i++){  
+	for(int i=1;i <= 1; i++){  
 		
 		docContent *fetch_data;
 		std::string CompressData;
@@ -296,7 +310,7 @@ int main()
 		std::string UncompressData;
 		snappy::Uncompress(CompressData2.data(),(unsigned long)CompressData2.size(),&UncompressData);
 		std::cout<<"解压后流大小 "<<UncompressData.size()<<std::endl;
-	 */	
+*/	
 
 
 /* 		if(!strcmp(fetch_data->content,UncompressData.data())){
@@ -374,10 +388,12 @@ int main()
 		
 		print_bytes(ID,8);
 
-		ecall_SendOpIdN(eid,0,ID,2*sizeof(int));
-
 		// //send M to server;
 		myServer->ReceiveM(M);
+
+		ecall_SendOpIdN(eid,0,ID,2*sizeof(int));
+
+
 
 		free(addr);
 		free(ID);
@@ -387,6 +403,31 @@ int main()
 		free(fetch_data);
 	}
 
+
+	/************************Search Process**********************************/
+	
+
+	/***********************Generating tokens********************************/
+	myClient->SetS(0);
+
+
+
+	
+	std::string s_keyword[2]= {"0,20000","4000,5000"};
+	// std::string s_keyword[2]= {"0,2000","4800,5000"};  
+
+	for (int s_i = 0; s_i < 2; s_i++){
+		printf("\nSearching ==> %s\n", s_keyword[s_i].c_str());
+
+		std::string TKq = myClient->Generate_Token(s_keyword[s_i]);
+
+		//myServer->doc_ids.clear();
+		//std::cout << timeSinceEpochMillisec() << std::endl;
+
+		ecall_search_tkq(eid,(unsigned char *)TKq.c_str(), TKq.size());	
+
+		// std::cout << timeSinceEpochMillisec() << std::endl;
+	}
 	
 	
 

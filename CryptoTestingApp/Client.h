@@ -25,10 +25,11 @@ class Client{
         void Del_GivenDocArray(const int * del_arr, docId* delV, int n);
         void getKFValue(unsigned char * outKey);
         //fisher altered!
-        void getKFValues(unsigned char * outKey1,unsigned char * outKey2);
+        void getKFValues(unsigned char * outKey1,unsigned char * outKey2,unsigned char * outKey3);
         void G_AesEncrypt(Lvalue * L ,unsigned char * KF1Value,const int & v,CT_pair & CT);
         void Generate_V(Vvalue * V,Block & block,const Gama * gama_cipher);
         T * Generate_Token(unsigned char * KF1Value,int v,int cmp,int q);
+        std::string Generate_Token(std::string keyword);
         int GetS();
         bool AddS();
         bool SetS(int num);
@@ -52,6 +53,7 @@ class Client{
         unsigned char KF0[ENC_KEY_SIZE];
         unsigned char KF1[ENC_KEY_SIZE];
         unsigned char KF2[ENC_KEY_SIZE];
+        unsigned char KF3[ENC_KEY_SIZE];
         int s;
         int file_reading_counter;
         std::multimap<int,std::vector<std::string>> ViVxGamaX;
