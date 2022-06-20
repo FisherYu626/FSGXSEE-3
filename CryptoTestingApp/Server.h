@@ -34,10 +34,12 @@ class Server{
 								rand_t *Q_w_u_arr,rand_t *Q_w_id_arr,
 								int pair_count);
 
-        void ReceiveM(std::unordered_map<std::string,std::string> & m);
+        void ReceiveM(std::vector<std::pair<std::string,std::string>> & m);
         void RetreivePKi(unsigned char *Addr,int addr_len,unsigned char * PKi,int PKi_len);
-        void Receive_uv_pairs(rand_t *u_arr,rand_t *v_arr,
-                                 int pair_count);
+        void Receive_uv_pairs(rand_t *u_arr,rand_t *v_arr,int pair_count);
+        void Receive_V_FromT1(unsigned char * u, size_t u_len,unsigned char *v,int *content_length);
+        std::map<int,std::vector<std::string>> Receive_V(rand_t *v_arr,int pair_count);
+
         //fisher added
         std::set<int> doc_ids;
 
@@ -49,7 +51,7 @@ class Server{
         
         std::unordered_map<std::string,std::vector<std::string>> IMM;
         std::unordered_map<std::string,std::string> EDB;
-        std::unordered_map<std::string,std::string> M;
+        std::vector<std::pair<std::string,std::string>> M;
         std::unordered_map<std::string,std::string> T1;
         std::unordered_map<std::string,std::string> T2;
 

@@ -12,6 +12,7 @@
 #include <iterator> // for std::begin, std::end
 #include <cstring> 
 #include <openssl/rand.h>
+#include <snappy.h>
 
 
 //fisher altered!
@@ -114,7 +115,7 @@ void Client::Del_GivenDocIndex(const int del_index, docId* delV_i){
     std::string fileName;
     fileName = std::to_string(del_index);
 
-    delV_i->id_length = fileName.length() +1;
+    delV_i->id_length = fileName.length();
     delV_i->doc_id = (char*)malloc(delV_i->id_length);
     memcpy(delV_i->doc_id,fileName.c_str(),delV_i->id_length);
 
@@ -588,5 +589,48 @@ void Client::PrintIds(){
     }
 
 
+    return;
+}
+
+void Client::DecryptPKs(std::map<int,std::vector<std::string>> res){
+    for(auto i:res){
+        
+        std::string enc_doc;
+        for(auto j:i.second){
+            enc_doc += j;
+        }
+        //print_bytes((unsigned char *)enc_doc.c_str(),enc_doc.size());
+        //printf("*******************恢复阶段 解密后 解压前 ******************\n");
+        std::string CompressData2;
+        CompressData2 = DecryptDoc(enc_doc); 
+
+        
+        //print_bytes((unsigned char *)CompressData2.c_str(),CompressData2.size());
+
+        int stri = CompressData2.size()-1;
+        while(CompressData2[stri] == '#'){
+            CompressData2.erase(CompressData2.length()-1);
+            stri--;
+        }
+        
+        // std::string test("helllo 123246523112312312312312");
+        // printf("test str len is %d",test.size());
+
+        // std::string CompressData3;
+        // snappy::Compress(test.data(),test.size(),&CompressData3);
+        
+        //print_bytes((unsigned char *)CompressData2.c_str(),CompressData2.size());
+        
+
+        //Verifying Compress
+        std::string UncompressData;
+        DDOC = CompressData2;
+        std::cout<<"压缩文件大小 "<<CompressData2.size()<<std::endl;
+        snappy::Uncompress(CompressData2.data(),(unsigned long)CompressData2.size(),&UncompressData);
+        std::cout<<"解压后流大小 "<<UncompressData.size()<<std::endl;
+
+        printf("\n%s\n",UncompressData.c_str());
+
+    }
     return;
 }

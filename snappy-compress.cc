@@ -17,7 +17,7 @@ uint64_t timeSinceEpochMillisec() {
 }
 
 string readNextDoc(int file_reading_counter){
-    string rawDocDir = "/home/node10/compress/dataset/100000/";
+    string DocDir = "/home/node10/compress/dataset/100000/";
     ifstream inFile;
     stringstream strStream;
 

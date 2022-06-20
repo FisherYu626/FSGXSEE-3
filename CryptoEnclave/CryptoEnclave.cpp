@@ -33,9 +33,9 @@ unsigned char KF2[ENC_KEY_SIZE] = {0};
 unsigned char KF3[ENC_KEY_SIZE] = {0};
 
 std::unordered_map<std::string, int> ST;
-std::unordered_map<std::string, std::vector<std::string>> D;
+//std::unordered_map<std::string, std::vector<std::string>> D;
 
-std::vector<std::string> d;
+std::vector<std::string> D;
 
 int w_min = __INT_MAX__;
 int w_max = 0;
@@ -56,9 +56,11 @@ int s = -1;
 std::vector<Qsgx *> QsgxCache;
 
 
+
+
 /*** setup */
 void ecall_init(unsigned char *keyF1,unsigned char *keyF2,unsigned char *keyF3, size_t len){ 
-	d.reserve(750000);
+	D.reserve(750000);
     //fisher altered 2.0 将client中的kf1 kf2传入enclave
     memcpy(KF1,keyF1,len);
     memcpy(KF2,keyF2,len);
@@ -225,7 +227,10 @@ void ecall_addDoc(char *doc_id, size_t id_length,char *content,int content_lengt
 /*** update with op=del */
 void ecall_delDoc(char *doc_id, size_t id_length){
     std::string delId(doc_id,id_length);
-    d.push_back(delId);
+    printf("id length is %d\n",id_length);
+    printf("docid is %s\n",doc_id,id_length);
+    D.push_back(delId);
+    printf("del id is %s\n",delId);
 }
 
 /*** search for a keyword */
@@ -1288,6 +1293,9 @@ void ecall_SendOpIdN(int op,unsigned char * IdN,int len){
             std::string word = (*it);
             //更新 n_min; n_max 放在这里
             int word_int = stoi((*it));
+
+            //if(word_int>105) continue;
+
             w_max = word_int>w_max? word_int:w_max;
             w_min = word_int<w_min? word_int:w_min;
 
@@ -1346,6 +1354,8 @@ void ecall_SendOpIdN(int op,unsigned char * IdN,int len){
                 ST.insert(std::pair<std::string,int>(_w,c));
             } else{
                 ST.at(_w) = c;
+                // if(_w == "#0000000110100")
+                //     printf("***ST[_w]: %d", ST[_w]);
             }
 
             unsigned char *kw =  (unsigned char *) malloc(ENTRY_HASH_KEY_LEN_128); 
@@ -1374,7 +1384,7 @@ void ecall_SendOpIdN(int op,unsigned char * IdN,int len){
                 _w2 = _w.substr(1);
                 //printf("_w-# is %s\n",_w2);
                 wi = BitString2Ten(_w2);
-                printf("Converted num is %d\n",wi);
+//                printf("Converted num is %d\n",wi);
             }
 
             wi = wi^c;
@@ -1385,13 +1395,17 @@ void ecall_SendOpIdN(int op,unsigned char * IdN,int len){
             //wic_bitstr包含"#"  !!!!!
             //std::string wic_bitstr =  Int2bit(wi,KEYWORD_BIT_LENGTH);
 
-            printf("wic_bitstr is %s\n",wic_bitstr);
+ //           printf("wic_bitstr is %s\n",wic_bitstr);
+ //           print_bytes((unsigned char *)wic_bitstr.c_str(),wic_bitstr.size());
             int v_len = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+wic_bitstr.size();
+ //           printf("v_len is %d",v_len);
             unsigned char * v = (unsigned char *)malloc(v_len);
+            
 
             enc_aes_gcm(kw,wic_bitstr.c_str(),wic_bitstr.size(),v,v_len);
-            printf("v is ");
-            print_bytes(v,v_len);
+  //          printf("\n is ");
+  //          print_bytes(v,v_len);
+//            printf("\n");
             
 
             memcpy(&u_arr[index].content,u,u_len);
@@ -1410,8 +1424,10 @@ void ecall_SendOpIdN(int op,unsigned char * IdN,int len){
 
             std::string wid_str = _w + std::to_string(id);
 
-            printf("wid_str is %s\n",wid_str);
-            printf("wid_str len is %d\n",wid_str.size());
+
+ //           printf("\nwid_str is %s\n",wid_str);
+ //           printf("wid_str len is %d\n",wid_str.size());
+            
 
             size_t len2 = ENTRY_HASH_KEY_LEN_128 + ENC_KEY_SIZE;
             unsigned char *wid_prime = (unsigned char *) malloc(len2 * sizeof(unsigned char));
@@ -1501,7 +1517,10 @@ void ecall_search_tkq(unsigned char * token,int token_len){
 
     if(a <= w_min&&b >= w_max) {
         wset.push_back("#");
-    }else{
+    }else if(b<w_min||a>w_max){
+        printf("wset inserting ERROR!!!\n");
+    }
+    else{
         //update bloom filter1
         std::string a_str = std::to_string(a);
         unsigned char * m = (unsigned char *)malloc(a_str.size());
@@ -1543,7 +1562,193 @@ void ecall_search_tkq(unsigned char * token,int token_len){
         free(m);
         free(m_prime);
     }
-    printf("getbrecm size: %d",wset.size());
+    printf("getbrecm size: %d\n",wset.size());
+    
+    std::unordered_map<std::string,std::set<int>> st;
+    
+    
+    for(auto doc_id:D){
+        for(auto w:wset){
+            //update bloom filter1
+            printf("w is %s\n",w);
+            printf("w is %d\n",w.size());
+            printf("doc id is %s\n",doc_id);
+            printf("doc id len is %d\n",doc_id.size());
+            std::string wid_str;
+            wid_str = w + doc_id;
+
+    //        printf("wid_str is %s\n",wid_str);
+    //        printf("wid_str len is %d\n",wid_str.size());
+
+            size_t len2 = ENTRY_HASH_KEY_LEN_128 + ENC_KEY_SIZE;
+            unsigned char *wid_prime = (unsigned char *) malloc(len2 * sizeof(unsigned char));
+            hash_SHA128_key(K_BF,ENC_KEY_SIZE, wid_str.c_str(),wid_str.size(),wid_prime);
+
+            if(myBloomFilter2->possiblyContains((uint8_t *)wid_prime,len2)){
+                printf("success hitted!!! %s\n",doc_id);
+                
+                unsigned char *kw =  (unsigned char *) malloc(ENTRY_HASH_KEY_LEN_128); 
+                //std::string c_str = std::to_string(c);
+                hash_SHA128(KF2,w.c_str(),w.length(),kw);
+
+                //print_bytes(kw,16);
+
+                //len is used for hash_SHA128_key multiple times
+                size_t u_len = ENTRY_HASH_KEY_LEN_128;
+                //generate a pair (u,v)
+                unsigned char *u = (unsigned char *) malloc(u_len * sizeof(unsigned char));
+                
+                
+                hash_SHA128(kw,doc_id.c_str(),doc_id.length(),u);
+                
+                ////////////////////////预先设定v大小10字节
+                int v_len = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+10;////////////////////////////////////
+                unsigned char * v = (unsigned char *)malloc(v_len);
+
+                int * v_content_len = (int *)malloc(sizeof(int));
+                                
+                ocall_Retrieve_V_FromT1(u,u_len,v,v_len,v_content_len,(size_t)sizeof(int));
+                
+                printf("v len is %d \n",v_len);
+                print_bytes(v,*v_content_len);
+                printf("v_cipher len is %d \n",*v_content_len);
+
+                unsigned char * v_cipher = (unsigned char *)malloc(*v_content_len);
+                memcpy(v_cipher,v,*v_content_len);
+                printf("v_cipher is--------------------------\n");
+                print_bytes(v_cipher,*v_content_len);
+
+                int v_dec_len = (*v_content_len) - AESGCM_MAC_SIZE-AESGCM_IV_SIZE;
+                unsigned char * v_dec = (unsigned char *)malloc(v_dec_len);
+
+                dec_aes_gcm(kw,v_cipher,*v_content_len,v_dec,v_dec_len);
+
+                std::string v_str((char *)v_dec,v_dec_len);
+                printf("vdec len is %d\n",v_dec_len);
+                print_bytes(v_dec,v_dec_len);
+                printf("v_str is %s\n",v_dec);
+
+                printf("v num is %d\n",stoi(v_str));
+
+                int wi;
+                std::string w2;
+                
+                if(w == "#"){
+                    wi = -1;
+
+                }else{
+                    //printf("_w is %s\n",_w);
+                    w2 = w.substr(1);
+                    //printf("_w-# is %s\n",_w2);
+                    wi = BitString2Ten(w2);
+                    printf("Converted num is %d\n",wi);
+                }
+                int v_int = stoi(v_str);
+                int c = wi ^ v_int;
+
+                printf("now get the c is %d\n",c);
+
+                if(st.count(w)){
+                    st[w].insert(c);
+                }else{
+                    st.insert(std::pair<std::string,std::set<int>> {w,{c}});
+                }
+                
+
+
+
+
+                free(kw);
+                free(u);
+                free(v);
+                free(v_content_len);
+                free(v_cipher);
+                free(v_dec);
+                kw = NULL;
+                u = NULL;
+                v = NULL;
+                v_content_len = NULL;
+                v_cipher = NULL;
+                v_dec = NULL;
+
+
+            }
+
+
+            free(wid_prime);
+
+        }
+    }
+    int pair_no = 0;
+    for(auto w:wset){
+        for(int i = 1;i<=ST[w];i++){
+            if(!st[w].count(i)){
+                pair_no++;
+            }
+        }
+    }
+
+    int index = 0;
+    rand_t Qv_arr[pair_no];
+    for(auto w:wset){
+        printf("w is %s\n",w);
+        printf("ST[w]: %d\n",ST[w]);
+        for(int i = 1;i<=ST[w];i++){
+            if(!st[w].count(i)){
+                unsigned char *kw =  (unsigned char *) malloc(ENTRY_HASH_KEY_LEN_128); 
+                //std::string c_str = std::to_string(c);
+                hash_SHA128(KF2,w.c_str(),w.length(),kw);
+
+                int wi;
+                std::string _w2;
+                
+                if(w == "#"){
+                    wi = -1;
+
+                }else{
+                    //printf("_w is %s\n",_w);
+                    _w2 = w.substr(1);
+                    //printf("_w-# is %s\n",_w2);
+                    wi = BitString2Ten(_w2);
+    //                printf("Converted num is %d\n",wi);
+                }
+                printf("w is %s\n",w);
+                printf("i is %d\n",i);
+                
+                wi = wi^i;
+                std::string wic_bitstr =  std::to_string(wi);
+
+                
+                //wic_bitstr包含"#"  !!!!!
+                //std::string wic_bitstr =  Int2bit(wi,KEYWORD_BIT_LENGTH);
+
+    //           printf("wic_bitstr is %s\n",wic_bitstr);
+    //           print_bytes((unsigned char *)wic_bitstr.c_str(),wic_bitstr.size());
+                int v_len = AESGCM_MAC_SIZE+ AESGCM_IV_SIZE+wic_bitstr.size();
+    //           printf("v_len is %d",v_len);
+                unsigned char * v = (unsigned char *)malloc(v_len);
+                
+
+                enc_aes_gcm(kw,wic_bitstr.c_str(),wic_bitstr.size(),v,v_len);
+
+                memcpy(&Qv_arr[index].content,v,v_len);
+                Qv_arr[index].content_length = v_len;
+
+                index++;
+
+                free(kw);
+                free(v);
+                kw = NULL;
+                v = NULL;
+            }
+        }
+        
+    }
+    printf("index is %d\n", index);
+    printf("pair node is %d\n", pair_no);
+    
+    ocall_transfer_V(Qv_arr,pair_no, sizeof(rand_t));
+        
 
 
     free(kq);

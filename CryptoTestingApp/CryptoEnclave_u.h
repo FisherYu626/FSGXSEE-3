@@ -68,6 +68,14 @@ void SGX_UBRIDGE(SGX_NOCONVENTION, ocall_retrieve_PKi, (unsigned char* Addr, int
 #define OCALL_TRANSFER_UV_PAIRS_DEFINED__
 void SGX_UBRIDGE(SGX_NOCONVENTION, ocall_transfer_uv_pairs, (const void* u_arr, const void* v_arr, int pair_count, int rand_size));
 #endif
+#ifndef OCALL_RETRIEVE_V_FROMT1_DEFINED__
+#define OCALL_RETRIEVE_V_FROMT1_DEFINED__
+void SGX_UBRIDGE(SGX_NOCONVENTION, ocall_Retrieve_V_FromT1, (unsigned char* u, size_t u_len, unsigned char* v, size_t v_len, int* content_length, size_t int_len));
+#endif
+#ifndef OCALL_TRANSFER_V_DEFINED__
+#define OCALL_TRANSFER_V_DEFINED__
+void SGX_UBRIDGE(SGX_NOCONVENTION, ocall_transfer_V, (const void* v_arr, int pair_count, int rand_size));
+#endif
 #ifndef SGX_OC_CPUIDEX_DEFINED__
 #define SGX_OC_CPUIDEX_DEFINED__
 void SGX_UBRIDGE(SGX_CDECL, sgx_oc_cpuidex, (int cpuinfo[4], int leaf, int subleaf));

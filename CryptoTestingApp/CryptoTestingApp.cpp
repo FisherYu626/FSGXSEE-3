@@ -42,7 +42,7 @@ uint64_t timeSinceEpochMillisec() {
 std::unordered_map<int,std::vector<int>> DB;
 
 int total_file_no = (int)10;//50000;//100000
-int del_no = (int)2;//10000;//10000;
+int del_no = (int)1;//10000;//10000;
 
 /* 	Note 1: Enclave only recognises direct pointer with count*size, where count is the number of elements in the array, and size is the size of each element
 		other further pointers of pointers should have fixed max length of array to eliminate ambiguity to Enclave (by using pointer [max_buf]).
@@ -224,6 +224,31 @@ void ocall_transfer_uv_pairs(const void *u_arr,
 }
 
 
+void ocall_Retrieve_V_FromT1(unsigned char * u, size_t u_len,unsigned char *v, size_t v_len,int *content_length, size_t int_len){
+
+	printf("now starting retreiveing *********************\n");
+	print_bytes(v,v_len);
+	myServer->Receive_V_FromT1(u, u_len,v,content_length);
+	print_bytes(v,*content_length);
+	printf("now ending retreiveing *********************\n");
+	return;
+}
+
+void ocall_transfer_V(const void *v_arr, int pair_count, int rand_size){
+
+	std::map<int,std::vector<std::string>> res;
+
+	res = myServer->Receive_V((rand_t *)v_arr,pair_count);
+
+
+	printf("res size is %d\n",res.size());
+	
+	myClient->DecryptPKs(res);
+
+
+
+	return;
+}
 
 int main()
 {
@@ -261,7 +286,7 @@ int main()
 	printf("Adding doc\n");
 
 	/*** Saving the V to DB(v)*************************************/
-	for(int i=1;i <= 1; i++){  
+	for(int i=1;i <= 3; i++){  
 		
 		docContent *fetch_data;
 		std::string CompressData;
@@ -269,7 +294,7 @@ int main()
 		
 		std::vector<std::string> ComSlices;
 
-		std::unordered_map<std::string,std::string> M;
+		std::vector<std::pair<std::string,std::string>> M;
 
 		fetch_data = (docContent *)malloc(sizeof( docContent));
 		myClient->ReadNextDoc(fetch_data);
@@ -283,6 +308,9 @@ int main()
 		snappy::Compress(fetch_data->content,(unsigned long)fetch_data->content_length,&CompressData);
 		std::cout<<"压缩后流大小"<<CompressData.size()<<std::endl;
 
+		//printf("*******************压缩后 加密前******************\n");
+		//print_bytes((unsigned char *)CompressData.c_str(),CompressData.size());
+
 		
 		//填充压缩后文件至200字节整数倍
 		myClient->PaddingCompressdata(CompressData);
@@ -291,26 +319,29 @@ int main()
 		printf("*******************Encrypting ******************\n");
 		Enc_data =  myClient->EncryptDoc(CompressData);
 		std::cout<<"加密后流大小 "<<Enc_data.size()<<std::endl;
+
+		printf("*******************压缩后 加密后 ******************\n");
+		print_bytes((unsigned char *)Enc_data.c_str(),Enc_data.size());
 		//std::cout<<CompressData<<std::endl;
 	
-/* 		
-		//Verifying doc Enc
-		printf("*******************Verify Encrypting ******************\n");
-		std:: string CompressData2;
-		CompressData2 =  myClient->DecryptDoc(Enc_data); 
-		std::cout<<"加密后解压前流大小 "<<CompressData2.size()<<std::endl;
+		
+		// //Verifying doc Enc
+		// printf("*******************Verify Encrypting ******************\n");
+		// std:: string CompressData2;
+		// CompressData2 =  myClient->DecryptDoc(Enc_data); 
+		// std::cout<<"解密后解压前流大小 "<<CompressData2.size()<<std::endl;
 
-		int stri = CompressData2.size()-1;
-		while(CompressData2[stri] == '#'){
-			CompressData2.erase(CompressData2.length()-1);
-			stri--;
-		}
+		// int stri = CompressData2.size()-1;
+		// while(CompressData2[stri] == '#'){
+		// 	CompressData2.erase(CompressData2.length()-1);
+		// 	stri--;
+		// }
 
-		//Verifying Compress
-		std::string UncompressData;
-		snappy::Uncompress(CompressData2.data(),(unsigned long)CompressData2.size(),&UncompressData);
-		std::cout<<"解压后流大小 "<<UncompressData.size()<<std::endl;
-*/	
+		// //Verifying Compress
+		// std::string UncompressData;
+		// snappy::Uncompress(CompressData2.data(),(unsigned long)CompressData2.size(),&UncompressData);
+		// std::cout<<"解压后流大小 "<<UncompressData.size()<<std::endl;
+
 
 
 /* 		if(!strcmp(fetch_data->content,UncompressData.data())){
@@ -367,7 +398,7 @@ int main()
 			std::string PK;
 			PK = Enc_data.substr(j*COMSLICE_LEN,COMSLICE_LEN);
 
-			M.insert(std::pair<std::string,std::string> {Addr,PK});
+			M.push_back(std::pair<std::string,std::string> {Addr,PK});
 			
 		}
 		std::cout<<"************Slicing part end!!!**********"<<std::endl;		
@@ -403,6 +434,31 @@ int main()
 		free(fetch_data);
 	}
 
+	/************************Delete Process**********************************/
+
+
+
+	for(int del_index=1; del_index <=del_no; del_index++){
+		docId delV_i;
+		//printf("->%s",delV_i[del_index].doc_id);
+
+		myClient->Del_GivenDocIndex(del_index, &delV_i);
+
+		ecall_delDoc(eid,delV_i.doc_id,delV_i.id_length);
+	}
+
+
+
+
+
+
+
+
+
+	/************************Delete end**********************************/
+
+
+
 
 	/************************Search Process**********************************/
 	
@@ -413,7 +469,7 @@ int main()
 
 
 	
-	std::string s_keyword[2]= {"0,20000","4000,5000"};
+	std::string s_keyword[2]= {"100,105","0,1"};
 	// std::string s_keyword[2]= {"0,2000","4800,5000"};  
 
 	for (int s_i = 0; s_i < 2; s_i++){
@@ -427,10 +483,13 @@ int main()
 		ecall_search_tkq(eid,(unsigned char *)TKq.c_str(), TKq.size());	
 
 		// std::cout << timeSinceEpochMillisec() << std::endl;
+		
+
 	}
 	
 	
 
+	
 	
 	delete myClient;
 	delete myServer;

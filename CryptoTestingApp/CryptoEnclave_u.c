@@ -145,6 +145,21 @@ typedef struct ms_ocall_transfer_uv_pairs_t {
 	int ms_rand_size;
 } ms_ocall_transfer_uv_pairs_t;
 
+typedef struct ms_ocall_Retrieve_V_FromT1_t {
+	unsigned char* ms_u;
+	size_t ms_u_len;
+	unsigned char* ms_v;
+	size_t ms_v_len;
+	int* ms_content_length;
+	size_t ms_int_len;
+} ms_ocall_Retrieve_V_FromT1_t;
+
+typedef struct ms_ocall_transfer_V_t {
+	const void* ms_v_arr;
+	int ms_pair_count;
+	int ms_rand_size;
+} ms_ocall_transfer_V_t;
+
 typedef struct ms_sgx_oc_cpuidex_t {
 	int* ms_cpuinfo;
 	int ms_leaf;
@@ -277,6 +292,22 @@ static sgx_status_t SGX_CDECL CryptoEnclave_ocall_transfer_uv_pairs(void* pms)
 	return SGX_SUCCESS;
 }
 
+static sgx_status_t SGX_CDECL CryptoEnclave_ocall_Retrieve_V_FromT1(void* pms)
+{
+	ms_ocall_Retrieve_V_FromT1_t* ms = SGX_CAST(ms_ocall_Retrieve_V_FromT1_t*, pms);
+	ocall_Retrieve_V_FromT1(ms->ms_u, ms->ms_u_len, ms->ms_v, ms->ms_v_len, ms->ms_content_length, ms->ms_int_len);
+
+	return SGX_SUCCESS;
+}
+
+static sgx_status_t SGX_CDECL CryptoEnclave_ocall_transfer_V(void* pms)
+{
+	ms_ocall_transfer_V_t* ms = SGX_CAST(ms_ocall_transfer_V_t*, pms);
+	ocall_transfer_V(ms->ms_v_arr, ms->ms_pair_count, ms->ms_rand_size);
+
+	return SGX_SUCCESS;
+}
+
 static sgx_status_t SGX_CDECL CryptoEnclave_sgx_oc_cpuidex(void* pms)
 {
 	ms_sgx_oc_cpuidex_t* ms = SGX_CAST(ms_sgx_oc_cpuidex_t*, pms);
@@ -319,9 +350,9 @@ static sgx_status_t SGX_CDECL CryptoEnclave_sgx_thread_set_multiple_untrusted_ev
 
 static const struct {
 	size_t nr_ocall;
-	void * table[18];
+	void * table[20];
 } ocall_table_CryptoEnclave = {
-	18,
+	20,
 	{
 		(void*)CryptoEnclave_ocall_print_string,
 		(void*)CryptoEnclave_ocall_transfer_encrypted_entries,
@@ -336,6 +367,8 @@ static const struct {
 		(void*)CryptoEnclave_ocall_sendLVGAMA,
 		(void*)CryptoEnclave_ocall_retrieve_PKi,
 		(void*)CryptoEnclave_ocall_transfer_uv_pairs,
+		(void*)CryptoEnclave_ocall_Retrieve_V_FromT1,
+		(void*)CryptoEnclave_ocall_transfer_V,
 		(void*)CryptoEnclave_sgx_oc_cpuidex,
 		(void*)CryptoEnclave_sgx_thread_wait_untrusted_event_ocall,
 		(void*)CryptoEnclave_sgx_thread_set_untrusted_event_ocall,

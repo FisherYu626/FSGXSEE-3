@@ -39,6 +39,8 @@ sgx_status_t SGX_CDECL ocall_receive_R(unsigned char* R, int R_len);
 sgx_status_t SGX_CDECL ocall_sendLVGAMA(unsigned char* L2, int L2_len, unsigned char* V2, int V2_len, unsigned char* gama_X2_plain, int gama_X2_len);
 sgx_status_t SGX_CDECL ocall_retrieve_PKi(unsigned char* Addr, int addr_len, unsigned char* PKi, int PK_len);
 sgx_status_t SGX_CDECL ocall_transfer_uv_pairs(const void* u_arr, const void* v_arr, int pair_count, int rand_size);
+sgx_status_t SGX_CDECL ocall_Retrieve_V_FromT1(unsigned char* u, size_t u_len, unsigned char* v, size_t v_len, int* content_length, size_t int_len);
+sgx_status_t SGX_CDECL ocall_transfer_V(const void* v_arr, int pair_count, int rand_size);
 sgx_status_t SGX_CDECL sgx_oc_cpuidex(int cpuinfo[4], int leaf, int subleaf);
 sgx_status_t SGX_CDECL sgx_thread_wait_untrusted_event_ocall(int* retval, const void* self);
 sgx_status_t SGX_CDECL sgx_thread_set_untrusted_event_ocall(int* retval, const void* waiter);

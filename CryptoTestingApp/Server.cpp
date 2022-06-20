@@ -189,10 +189,10 @@ void Server::RetrieveVGama(unsigned char * L_text,int L_length,
 
 }
 
-void Server::ReceiveM(std::unordered_map<std::string,std::string> & m){
+void Server::ReceiveM(std::vector<std::pair<std::string,std::string>> & m){
     for(auto i:m){
       EDB.insert(i);
-      M.insert(i);
+      M.push_back(i);
 
 /*       std::cout<<"now insert the addri"<<i.first<<std::endl;
       std::cout<<"now insert the pk len is"<<i.second<<std::endl; 
@@ -249,7 +249,66 @@ void Server::Receive_uv_pairs(rand_t *u_arr,rand_t *v_arr,int pair_count){
       }
 
   }
-
+  
   M.clear();
 
+}
+
+void Server::Receive_V_FromT1(unsigned char * u, size_t u_len,unsigned char *v,int *content_length){
+    
+    std::string u_key((char *)u,u_len);
+	  std::string v_value;
+    v_value = T1[u_key];
+    printf("vvalue len is ************************\n");
+    print_bytes((unsigned char *)v_value.c_str(),v_value.size());
+    memcpy(v,v_value.c_str(),v_value.size());
+	  *content_length = v_value.size();
+
+    int count = 0;
+    std::string v_count = v_value+std::to_string(count);
+    while(T2.count(v_count)){
+
+      std::string addr = T2[v_count];
+      int i = EDB.erase(addr);
+      if(i== 0 ) std::cout<<"delete EDB ERROR"<<std::endl;
+
+      int j = T2.erase(v_count);
+      if(j == 0 ) std::cout<<"delete T2 ERROR"<<std::endl;
+
+      count++;
+      printf("now the count is %d\n",count);
+      v_count = v_value+std::to_string(count);
+    }
+
+
+    return;
+}
+
+std::map<int,std::vector<std::string>> Server::Receive_V(rand_t *v_arr,int pair_count){
+    
+    std::map<int,std::vector<std::string>> res;
+
+
+    for(int i = 0;i<pair_count;i++){
+        int count = 0;
+        std::vector<std::string> temp;
+        std::string v((char *)v_arr[i].content,v_arr[i].content_length);
+
+        std::string v_count = v+std::to_string(count);
+        while(T2.count(v_count)){
+
+            std::string addr = T2[v_count];
+            temp.push_back(EDB[addr]);
+            count++;
+            v_count = v+std::to_string(count);
+        }
+        res.insert(std::pair<int,std::vector<std::string>>{i,temp});
+
+    }
+
+    printf("res size: %d \n", res.size());
+
+
+
+    return res;
 }

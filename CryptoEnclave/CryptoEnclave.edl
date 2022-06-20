@@ -69,6 +69,12 @@ enclave {
         void ocall_transfer_uv_pairs([in, count= pair_count, size=rand_size] const void *u_arr, 
 									            [in, count= pair_count, size=rand_size] const void *v_arr, 
 									            int pair_count, int rand_size);
-                                                
+
+        void ocall_Retrieve_V_FromT1([in, size=u_len] unsigned char * u, size_t u_len,
+                                     [out, size=v_len] unsigned char *v, size_t v_len,
+                                     [out, count=int_len] int *content_length, size_t int_len);
+
+        void ocall_transfer_V([in, count= pair_count, size=rand_size] const void *v_arr, 
+                                        int pair_count, int rand_size);                                    
     };
 };

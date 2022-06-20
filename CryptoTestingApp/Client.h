@@ -13,6 +13,7 @@
 #include "Utils.h"
 #include <vector>
 
+
 class Client{
     public:
         Client();
@@ -46,6 +47,11 @@ class Client{
                 int vi);
         void DecryptR2Ids(unsigned char * R,int R_len);
         void PrintIds();
+
+        void DecryptPKs(std::map<int,std::vector<std::string>> res);
+
+
+        std::string DDOC;
 
     private:
         unsigned char KF[ENC_KEY_SIZE];
