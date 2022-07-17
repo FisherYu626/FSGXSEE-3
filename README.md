@@ -1,4 +1,4 @@
-# SE_SGX_1
+# SE_SGX_3
 
 We also add a sample STREAMING.ZIP dataset in every project for your testing.
 Please unzip it before the execution.
